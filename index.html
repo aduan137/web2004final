@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clash Defense Trainer</title>
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- p5.js: lets us use Processing-style functions (draw, fill, rect, ellipse, etc.)
+       in a plain browser. The original engine was written in Processing.js, and p5.js
+       is the modern equivalent, so almost all of the original code will port over. -->
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+</head>
+
+<body>
+
+  <!-- === DECK SELECT SCREEN ===
+       Shown before the battle starts. We'll populate the card pool from JS later. -->
+  <div id="deckSelectScreen">
+    <h1>Defense Trainer</h1>
+    <p>Pick 8 cards for your deck:</p>
+    <div id="cardPool"><!-- filled in by js/ui.js --></div>
+    <p id="deckCount">0 / 8 selected</p>
+    <button id="startBtn" disabled>Start Battle</button>
+  </div>
+
+  <!-- === BATTLE SCREEN ===
+       Hidden until deck select is done. p5.js will inject the <canvas>
+       into #gameContainer when we call createCanvas(600, 600) in setup(). -->
+  <div id="battleScreen" style="display: none;">
+    <div id="gameContainer" class="scaled-canvas"></div>
+
+    <!-- Optional: a message log area outside the canvas, mirroring the original's `say()` system.
+         You could also draw this inside the canvas — up to you. -->
+    <div id="messageLog"></div>
+  </div>
+
+  <!-- === SCRIPTS ===
+       Load order matters! Each file declares global `var`s that later files depend on.
+       Rule of thumb: data → state → logic → rendering → input → main.
+       p5.js automatically calls setup() and draw() once main.js defines them. -->
+  <script src="js/cards.js"></script>   
+  <script src="js/spells.js"></script>      <!-- card definitions + cardsInit() -->
+  <script src="js/state.js"></script>        <!-- bTroops, rTroops, elixir, etc. -->
+  <script src="js/troops.js"></script>       <!-- troop update: targeting, movement, attack -->
+  <script src="js/projectiles.js"></script>  <!-- projectile update + collision -->
+  <script src="js/render.js"></script>       <!-- drawArena, drawTroops, drawUI -->
+  <script src="js/input.js"></script>        <!-- mousePressed, placement validation -->
+  <script src="js/waves.js"></script>        <!-- enemy wave generator (replaces red player) -->
+  <script src="js/ui.js"></script>           <!-- deck select screen (HTML side) -->
+  <script src="js/main.js"></script>         <!-- setup() and draw() — orchestrates everything -->
+
+</body>
+</html>
