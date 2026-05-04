@@ -7,20 +7,17 @@
 
 body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: #1a1a2e;       /* dark navy background */
+  background: #1a1a2e;
   color: #f0f0f0;
+  margin: 0;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 20px;
 }
 
 h1 {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
   color: #ffd700;            /* Clash-ish gold */
-  text-shadow: 2px 2px 0 #000;
+  text-shadow: 0.125rem 0.125rem 0 #000;
 }
 
 p {
@@ -28,50 +25,22 @@ p {
 }
 
 /* ===== DECK SELECT SCREEN ===== */
-#deckSelectScreen {
-  width: 100%;
-  max-width: 700px;
-  text-align: center;
-}
+
 
 /* Grid of available cards. Each card will be a div added by js/ui.js. */
-#cardPool {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 10px;
-  margin: 20px 0;
-  padding: 15px;
-  background: #16213e;
-  border-radius: 8px;
-  border: 2px solid #0f3460;
-}
 
-/* Styling for each card tile. Your js/ui.js should give them class="cardTile"
-   and toggle class="selected" when clicked. */
-.cardTile {
-  background: #0f3460;
-  border: 2px solid #533483;
-  border-radius: 6px;
-  padding: 10px 6px;
-  cursor: pointer;
-  transition: transform 0.1s, border-color 0.1s;
-  user-select: none;
-  aspect-ratio: 3 / 4;        /* roughly card-shaped */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-}
+
+
 
 .cardTile:hover {
-  transform: translateY(-2px);
+  transform: translateY(-0.125rem);
   border-color: #e94560;
 }
 
 .cardTile.selected {
   border-color: #ffd700;
   background: #533483;
-  box-shadow: 0 0 10px #ffd700;
+  box-shadow: 0 0 0.625rem #ffd700;
 }
 
 .cardTile .cardName {
@@ -86,74 +55,22 @@ p {
   font-weight: bold;
 }
 
-#deckCount {
-  font-size: 1.1rem;
-  color: #e94560;
-}
 
-/* ===== BUTTONS ===== */
-button {
-  font-family: inherit;
-  font-size: 1.1rem;
-  font-weight: bold;
-  padding: 12px 30px;
-  background: #e94560;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.1s, transform 0.05s;
-}
 
-button:hover:not(:disabled) {
-  background: #ff5577;
-}
 
-button:active:not(:disabled) {
-  transform: translateY(1px);
-}
 
-button:disabled {
-  background: #555;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* ===== BATTLE SCREEN ===== */
-#battleScreen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-/* p5.js injects a <canvas> inside this div when we call canvas.parent('gameContainer') */
 #gameContainer {
-  border: 3px solid #ffd700;
-  border-radius: 4px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  line-height: 0;             /* kills the phantom space under the canvas */
+   line-height: 0;
+    box-sizing: border-box;
+  border: 28px solid transparent;
+  border-image: url("frame.png") 90 fill / 28px / 0 stretch;
+ 
 }
 
 /* Log area — mirrors the original engine's say() messages */
-#messageLog {
-  width: 600px;
-  max-width: 100%;
-  height: 120px;
-  overflow-y: auto;
-  background: #16213e;
-  border: 1px solid #0f3460;
-  border-radius: 4px;
-  padding: 10px;
-  font-family: "Courier New", monospace;
-  font-size: 0.85rem;
-  color: #ccc;
-}
 
-#messageLog .msg {
-  padding: 2px 0;
-  border-bottom: 1px solid #0f3460;
-}
+
+
 /* ============================================================
    Responsive canvas scaling
    ------------------------------------------------------------
@@ -165,28 +82,1155 @@ button:disabled {
    other code needs to change.
    ============================================================ */
 .scaled-canvas {
-  /* Target size: fit to screen but never larger than 90vmin (90% of smaller viewport dimension) */
-  width: 99vmin;
-  height: 99vmin;
-  aspect-ratio: 1 / 1;
+  height: 99vh;
+  width: auto;
+  aspect-ratio: 290 / 520;
+  display: block;
+  border-radius: rgb(137, 118, 9);
+}
+
+.scaled-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  image-rendering: -moz-crisp-edges;
+  
+  border: 4px solid black;
+  
+}
+
+#battleScreen {
+  position: relative;          /* anchor for absolute side panels */
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;     /* canvas dead center */
+  padding: 0;
+  gap: 0;
+  background-image: url("wallpaper.jpg");
+}
+
+/* ============================================================
+   DECKBOOK — drop-in stylesheet
+   All rules are scoped to .deckbook-app so they won't
+   collide with your existing styles.css.
+   ============================================================ */
+
+/* Wrapper / "screen" container */
+.deckbook-app {
+	font-family: "Poppins", sans-serif;
+	background-color: #2e3537;
+	width: 100%;
+	min-height: 100vh;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	position: relative;
+	color: #f0e8d4;
+}
+
+/* Hide ONLY the page-flip checkboxes, not every input */
+.deckbook-app > input[type="checkbox"] {
+	display: none;
+}
+
+/* ============================================================
+   FLIPBOOK
+   ============================================================ */
+.deckbook-app .book {
+	width: 23.75rem;
+	height: 32.5rem;
+	position: relative;
+	transition-duration: 1s;
+	perspective: 93.75rem;
+}
+.deckbook-app .cover,
+.deckbook-app .back-cover {
+	background-color: #4173a5;
+	width: 100%;
+	height: 100%;
+	border-radius: 0 0.9375rem 0.9375rem 0;
+	box-shadow: 0 0 0.3125rem rgb(41, 41, 41);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transform-origin: center left;
+}
+.deckbook-app .cover {
+	position: absolute;
+	z-index: 4;
+	transition: transform 1s;
+	transform-style: preserve-3d;
+}
+.deckbook-app .cover > label.cover-front {
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+}
+.deckbook-app .back-cover {
+	position: relative;
+	z-index: -1;
+}
+.deckbook-app .page {
+	position: absolute;
+	background-color: white;
+	width: 22.5rem;
+	height: 31.25rem;
+	border-radius: 0 0.9375rem 0.9375rem 0;
+	margin-top: 0.625rem;
+	transform-origin: left;
+	transform-style: preserve-3d;
+	transform: rotateY(0deg);
+	transition-duration: 1.5s;
+}
+.deckbook-app .front-page {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	backface-visibility: hidden;
+	box-sizing: border-box;
+	padding: 1rem 1rem 3.2rem 1rem;
+}
+.deckbook-app .back-page {
+	transform: rotateY(180deg);
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	backface-visibility: hidden;
+	z-index: 99;
+	box-sizing: border-box;
+	padding: 1rem 1rem 3.2rem 1rem;
+}
+.deckbook-app .next,
+.deckbook-app .prev {
+	position: absolute;
+	bottom: 1rem;
+	cursor: pointer;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+	background: rgba(65, 115, 165, 0.15);
+	color: #2c5278;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.3rem;
+	line-height: 1;
+	border: 0.0625rem solid rgba(65, 115, 165, 0.3);
+	transition: all 0.2s;
+	user-select: none;
+	z-index: 10;
+}
+.deckbook-app .next { right: 1rem; }
+.deckbook-app .prev { left: 1rem; }
+.deckbook-app .next:hover,
+.deckbook-app .prev:hover {
+	background: #4173a5;
+	color: white;
+	transform: scale(1.1);
+}
+.deckbook-app #page1 { z-index: 3; }
+.deckbook-app #page2 { z-index: 2; }
+.deckbook-app #page3 { z-index: 1; }
+
+/* Cover/page flips - sibling selectors descend through .stage */
+.deckbook-app #checkbox-cover:checked ~ .stage .book {
+	transform: translateX(13.75rem);
+}
+.deckbook-app #checkbox-cover:checked ~ .stage .book .cover {
+	transition: transform 1.5s, z-index 0.5s 0.5s;
+	transform: rotateY(-180deg);
+	z-index: 1;
+}
+.deckbook-app #checkbox-cover:checked ~ .stage .book .page {
+	box-shadow: 0 0 0.1875rem rgb(99, 98, 98);
+}
+.deckbook-app #checkbox-page1:checked ~ .stage .book #page1 {
+	transform: rotateY(-180deg);
+	z-index: 2;
+}
+.deckbook-app #checkbox-page2:checked ~ .stage .book #page2 {
+	transform: rotateY(-180deg);
+	z-index: 3;
+}
+
+/* Stage handles the sidebar shift */
+.deckbook-app .stage {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100vh;
+	transition: transform 0.5s cubic-bezier(.4,0,.2,1);
+}
+.deckbook-app .stage.sidebar-open {
+	transform: translateX(-15vw);
+}
+
+/* Cover faces */
+.deckbook-app .cover-face {
+	position: absolute;
+	inset: 0;
+	backface-visibility: hidden;
+	border-radius: 0 0.9375rem 0.9375rem 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.deckbook-app .cover-front {
+  transition: box-shadow 1s cubic-bezier(.34, .8, .3, 1);
+  box-shadow:
+    0 0.0625rem 0 #d4c8a8,
+    0 0.125rem  0 #c5b896,
+    0 0.1875rem 0 #b8a886,
+    0 0.25rem   0 #c5b896,
+    0 0.3125rem 0 #d4c8a8,
+    0 0.375rem  0 #b8a886,
+    0 0.4375rem 0 #a89878,
+    0 0.5rem    0 #c5b896,
+    0 0.5625rem 0 #d4c8a8,
+    0 0.625rem  0 #b8a886,
+    0 0.6875rem 0 #c5b896,
+    0 0.75rem   0 #a89878,
+    0 0.8125rem 0 #1f3a52,
+    0 0.875rem  0 #14283a;
+}
+
+/* Squish all page layers to zero offset when the book is hovered */
+.deckbook-app .book:hover .cover-front {
+  box-shadow:
+    0 0 0 #d4c8a8,
+    0 0 0 #c5b896,
+    0 0 0 #b8a886,
+    0 0 0 #c5b896,
+    0 0 0 #d4c8a8,
+    0 0 0 #b8a886,
+    0 0 0 #a89878,
+    0 0 0 #c5b896,
+    0 0 0 #d4c8a8,
+    0 0 0 #b8a886,
+    0 0 0 #c5b896,
+    0 0 0 #a89878,
+    0 0 0 #1f3a52,
+    0 0 0 #14283a;
+}
+.deckbook-app .cover-back {
+  background-color: white;
+  transform: rotateY(180deg);
+  padding: 1rem 1rem 3.2rem 1rem;
+  border-right: 0.125rem solid rgba(0,0,0,0.1);
+  border-radius: 0.9375rem 0 0 0.9375rem;
+  /* Match the .page dimensions and position */
+  inset: auto;
+  top: 0.625rem;
+  left: 0;
+  width: 22.5rem;
+  height: 31.25rem;
+}
+.deckbook-app .cover-content { text-align: center; padding: 1rem; }
+.deckbook-app .cover-content h1 {
+	font-size: 2rem;
+	letter-spacing: 0.18rem;
+	margin: 0 0 0.5rem;
+	font-weight: 700;
+	color: #c5a23a;
+	text-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.3);
+}
+.deckbook-app .cover-content .ornament {
+	font-size: 1.1rem;
+	letter-spacing: 0.4rem;
+	opacity: 0.7;
+	margin: 0.5rem 0;
+	color: #c5a23a;
+}
+.deckbook-app .cover-content p {
+	margin: 0.5rem 0 0;
+	font-size: 0.78rem;
+	letter-spacing: 0.3rem;
+	text-transform: uppercase;
+	opacity: 0.7;
+}
+.deckbook-app .cover-front { pointer-events: auto; }
+.deckbook-app .cover-back  { pointer-events: none; }
+.deckbook-app #checkbox-cover:checked ~ .stage .cover .cover-front { pointer-events: none; }
+.deckbook-app #checkbox-cover:checked ~ .stage .cover .cover-back  { pointer-events: auto; }
+
+/* ============================================================
+   DECK HALVES & CARD SLOTS
+   ============================================================ */
+.deckbook-app .deck-half {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	grid-template-rows: repeat(2, 1fr);
+	gap: 0.5rem;
+	width: 100%;
+	height: 100%;
+}
+.deckbook-app .card-slot {
+	position: relative;
+	border: 0.125rem dashed rgba(65, 115, 165, 0.4);
+	border-radius: 0.5rem;
+	background: rgba(65, 115, 165, 0.04);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	font-size: 0.62rem;
+	color: rgba(46, 53, 55, 0.45);
+	font-weight: 600;
+	letter-spacing: 0.12rem;
+	text-transform: uppercase;
+	transition: all 0.18s;
+	overflow: hidden;
+	padding: 0.375rem;
+}
+.deckbook-app .card-slot:hover {
+	border-color: #4173a5;
+	background: rgba(65, 115, 165, 0.10);
+	color: #2c5278;
+	transform: translateY(-0.125rem);
+}
+.deckbook-app .card-slot.hint {
+	border-style: solid;
+	border-color: #c5a23a;
+	background: rgba(197, 162, 58, 0.14);
+	color: #6b5510;
+	animation: deckbookPulse 2s ease-in-out infinite;
+}
+@keyframes deckbookPulse {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(197, 162, 58, 0.4); }
+	50%      { box-shadow: 0 0 0 0.375rem rgba(197, 162, 58, 0); }
+}
+.deckbook-app .card-slot.active {
+	border-color: #4173a5 !important;
+	background: rgba(65, 115, 165, 0.20);
+	box-shadow: 0 0 0 0.1875rem rgba(65, 115, 165, 0.3);
+	animation: none;
+}
+.deckbook-app .card-slot.filled {
+	background: transparent;
+	color: white;
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: none;
+	letter-spacing: 0;
+	padding: 0.5rem 0.25rem 0.25rem;
+	flex-direction: column;
+	gap: 0.125rem;
+}
+
+.deckbook-app .card-slot .card-name {
+	line-height: 1.05;
+	text-shadow: 0 0.0625rem 0.125rem rgba(0,0,0,0.4);
+}
+.deckbook-app .card-slot .elixir-cost {
+	position: absolute;
+	top: 0.25rem;
+	left: 0.25rem;
+	width: 1.25rem;
+	height: 1.25rem;
+	background: radial-gradient(circle at 35% 35%, #f060d0 0%, #a01c8a 100%);
+	color: white;
+	border: 0.09375rem solid white;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.72rem;
+	font-weight: bold;
+	box-shadow: 0 0.0625rem 0.1875rem rgba(0,0,0,0.4);
+}
+.deckbook-app .card-slot .remove-btn {
+	position: absolute;
+	top: 0.125rem;
+	right: 0.125rem;
+	width: 1.125rem;
+	height: 1.125rem;
+	background: rgba(0,0,0,0.45);
+	color: white;
+	border: none;
+	border-radius: 50%;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 0.18s;
+	font-size: 0.85rem;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	font-family: sans-serif;
+}
+.deckbook-app .card-slot.filled:hover .remove-btn { opacity: 1; }
+
+.deckbook-app .deck-label {
+	position: absolute;
+	top: 0.375rem;
+	font-size: 0.6rem;
+	letter-spacing: 0.3rem;
+	color: rgba(46, 53, 55, 0.5);
+	text-transform: uppercase;
+	font-weight: 600;
+	pointer-events: none;
+}
+.deckbook-app .deck-label.left  { left: 0.75rem; }
+.deckbook-app .deck-label.right { right: 0.75rem; }
+
+.deckbook-app .end-page {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #999;
+	font-style: italic;
+	font-size: 0.9rem;
+	letter-spacing: 0.2rem;
+	text-transform: uppercase;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.deckbook-app .sidebar {
+	position: fixed;
+	top: 0;
+	right: 0;
+	width: 30vw;
+	min-width: 20rem;
+	height: 100vh;
+	background: linear-gradient(180deg, #232a2d 0%, #1a2022 100%);
+	border-left: 0.125rem solid #c5a23a;
+	box-shadow: -1.25rem 0 2.5rem rgba(0, 0, 0, 0.6);
+	transform: translateX(100%);
+	transition: transform 0.5s cubic-bezier(.4,0,.2,1);
+	z-index: 200;
+	display: flex;
+	flex-direction: column;
+	color: #f0e8d4;
+}
+.deckbook-app .sidebar.open { transform: translateX(0); }
+
+.deckbook-app .sidebar-header {
+	padding: 1.375rem 1.5rem 1rem;
+	border-bottom: 0.0625rem solid rgba(197, 162, 58, 0.25);
+}
+.deckbook-app .sidebar-title {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.875rem;
+}
+.deckbook-app .sidebar-title h3 {
+	font-size: 0.85rem;
+	letter-spacing: 0.3rem;
+	color: #c5a23a;
+	text-transform: uppercase;
+	margin: 0;
+	font-weight: 600;
+}
+.deckbook-app .close-btn {
+	background: none;
+	border: 0.0625rem solid rgba(197, 162, 58, 0.3);
+	color: #c5a23a;
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 50%;
+	font-size: 1rem;
+	cursor: pointer;
+	line-height: 1;
+	transition: all 0.2s;
+}
+.deckbook-app .close-btn:hover {
+	background: #c5a23a;
+	color: #1a2022;
+}
+.deckbook-app .search-input {
+	width: 100%;
+	padding: 0.625rem 0.875rem;
+	background: rgba(0,0,0,0.3);
+	border: 0.0625rem solid rgba(197, 162, 58, 0.3);
+	border-radius: 0.375rem;
+	color: #f0e8d4;
+	font-family: inherit;
+	font-size: 0.95rem;
+	outline: none;
+	box-sizing: border-box;
+	transition: border-color 0.2s, background 0.2s;
+}
+.deckbook-app .search-input:focus {
+	border-color: #c5a23a;
+	background: rgba(0,0,0,0.5);
+}
+.deckbook-app .search-input::placeholder {
+	color: rgba(240, 232, 212, 0.4);
+	font-style: italic;
+}
+.deckbook-app .filter-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.375rem;
+	margin-top: 0.625rem;
+}
+.deckbook-app .filter-pill {
+	padding: 0.25rem 0.625rem;
+	background: rgba(255,255,255,0.05);
+	border: 0.0625rem solid rgba(197, 162, 58, 0.2);
+	color: rgba(240, 232, 212, 0.7);
+	border-radius: 0.75rem;
+	font-size: 0.68rem;
+	letter-spacing: 0.1rem;
+	cursor: pointer;
+	text-transform: uppercase;
+	font-weight: 600;
+	transition: all 0.15s;
+}
+.deckbook-app .filter-pill:hover { color: #f0e8d4; }
+.deckbook-app .filter-pill.active {
+	background: #c5a23a;
+	color: #1a2022;
+	border-color: #c5a23a;
+}
+.deckbook-app .card-list {
+	flex: 1;
+	overflow-y: auto;
+	padding: 0.875rem 1.125rem 1.5rem;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.625rem;
+	align-content: start;
+}
+.deckbook-app .card-list::-webkit-scrollbar { width: 0.375rem; }
+.deckbook-app .card-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+.deckbook-app .card-list::-webkit-scrollbar-thumb { background: rgba(197, 162, 58, 0.4); border-radius: 0.1875rem; }
+.deckbook-app .card-list::-webkit-scrollbar-thumb:hover { background: #c5a23a; }
+.deckbook-app .lib-card {
+  position: relative;
+  background: transparent;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0;
+  cursor: pointer;
+  color: white;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  aspect-ratio: 285 / 420;     /* matches API icon dimensions */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+  transition: all 0.18s;
+  text-shadow: 0 0.0625rem 0.125rem rgba(0,0,0,0.4);
+}
+
+.deckbook-app .lib-card:hover {
+	transform: translateY(-0.1875rem) scale(1.04);
+	box-shadow: 0 0.5rem 1.125rem rgba(0,0,0,0.5);
+	border-color: #c5a23a;
+}
+.deckbook-app .lib-card .elixir {
+	position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1.375rem;
+  height: 1.375rem;
+	background: radial-gradient(circle at 35% 35%, #f060d0 0%, #a01c8a 100%);
+	border: 0.125rem solid white;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: bold;
+	font-size: 0.72rem;
+	color: white;
+	box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.4);
+}
+.deckbook-app .lib-card.in-deck { opacity: 0.4; cursor: not-allowed; }
+.deckbook-app .lib-card.in-deck:hover { transform: none; box-shadow: none; }
+.deckbook-app .lib-card.in-deck::after {
+	content: '✓';
+	position: absolute;
+	top: 0.25rem;
+	right: 0.25rem;
+	color: #c5a23a;
+	font-size: 0.85rem;
+	text-shadow: 0 0.0625rem 0.125rem rgba(0,0,0,0.6);
+}
+.deckbook-app .empty-state {
+	grid-column: 1 / -1;
+	text-align: center;
+	padding: 2.5rem 1.25rem;
+	color: rgba(240, 232, 212, 0.4);
+	font-style: italic;
+}
+.deckbook-app .suggested-decks-section {
+  border-bottom: 0.0625rem solid rgba(197, 162, 58, 0.2);
+}
+
+.deckbook-app .suggested-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.75rem 1.125rem;
+  color: #c5a23a;
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.3rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-shadow: 0 0.0625rem 0.125rem rgba(0,0,0,0.4);
+}
+.deckbook-app .suggested-toggle:hover { color: #f0e8d4; }
+.deckbook-app .suggested-toggle .toggle-arrow {
+  transition: transform 0.2s;
+  font-size: 0.9rem;
+}
+.deckbook-app .suggested-decks-section.collapsed .toggle-arrow {
+  transform: rotate(-90deg);
+}
+
+.deckbook-app .suggested-decks-list {
+  padding: 0 1.125rem 0.75rem;
+  max-height: 18rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: max-height 0.25s, padding 0.25s, opacity 0.2s;
+}
+.deckbook-app .suggested-decks-section.collapsed .suggested-decks-list {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.deckbook-app .suggested-deck {
+  background: rgba(0, 0, 0, 0.25);
+  border: 0.0625rem solid rgba(197, 162, 58, 0.2);
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.deckbook-app .suggested-deck:hover {
+  border-color: #c5a23a;
+  background: rgba(197, 162, 58, 0.1);
+  transform: translateY(-1px);
+}
+
+.deckbook-app .suggested-deck-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25rem;
+}
+.deckbook-app .suggested-deck-cards img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  display: block;
+}
+.deckbook-app .suggested-deck-cards .missing {
+  width: 100%;
+  aspect-ratio: 1;
+  background: rgba(255, 0, 0, 0.15);
+  border: 1px dashed rgba(255, 0, 0, 0.4);
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 100, 100, 0.7);
+  font-size: 0.6rem;
+  text-align: center;
+  padding: 0.15rem;
+}
+
+.deckbook-app .suggested-deck-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.4rem;
+  font-size: 0.65rem;
+  color: rgba(240, 232, 212, 0.5);
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+}
+.deckbook-app .suggested-deck-meta .avg-elixir {
+  color: #f060d0;
+  font-weight: bold;
+}
+#placeholderBattleBtn {
+	  opacity: 0;
+  pointer-events: none;
+    position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+ 
+  padding: 0.6rem 1.2rem;
+  
+}
+	
+
+
+body:has(#checkbox-cover:checked) #placeholderBattleBtn {
+  opacity: 1;
+  pointer-events: auto;
+    position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 50;
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(160deg, #c5a23a 0%, #8a6010 100%);
+  color: #1a2022;
+  border: none;
+  border-radius: 0.375rem;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.18rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.4);
+}
+
+#loadingOverlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  opacity: 0;                  /* always rendered, just invisible */
+  pointer-events: none;
+  transition: opacity 4s ease;
+}
+#loadingOverlay.active {
+  opacity: 1;
+
+}
+.battle-layout {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  height: 99vh;
+}
+
+.side-panel {
+  position: absolute;
+  right: 12%;
+  bottom: 2.7%;                /* cards anchored to the bottom-right corner */
+  padding: 0.83%;
+  
+  display: block;
+
+  
+}
+
+/* The grid is the size driver. Switch from rem to vh so it
+   scales with the screen instead of staying a fixed size. */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 15vh);   /* was repeat(2, 6rem) */
+  gap: 0.6vh;                              /* was 0.5rem */
+  justify-content: center;
+}
+
+.hand-card {
+  position: relative;
+  aspect-ratio: 5 / 6;            /* card-shaped */
+  background-image:url(card.png) ;
+   background-repeat: no-repeat;
+  background-position: center;
+
+  background-size: contain;
+          
+  cursor: pointer;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.scaled-canvas canvas {
-  /* The actual canvas element fills the container, but keeps square ratio */
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-  image-rendering: pixelated;  /* crispy when scaled up */
+.hand-card:hover {
+  transform: translateY(-4%);     /* was -3px — % of card height */
+  box-shadow: 0 0.6vh 1.2vh rgba(0, 0, 0, 0.4);
 }
 
-#battleScreen {
-  width: 100%;
+.hand-card.selected {
+
+  box-shadow: 0 0 0 0.4vh rgba(0, 0, 0, 0.5);
+}
+
+.hand-card.unaffordable {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hand-card img {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  pointer-events: none;
+  margin-bottom: 1vh;
+}
+
+.hand-card .card-cost {
+  position: absolute;
+  bottom: 75%;                     /* was 0.25rem */
+  right: 60%;
+  width: 28%;                     /* was 1.5rem — % of card width */
+  aspect-ratio: 1;                /* keeps it circular regardless of card aspect */
+   text-shadow: 
+    0px -1px 1px rgba(0, 0, 0, 0.77),   /* Dark top inner edge shadow */
+    0px 1px 0px rgba(255, 255, 255, 0.3); /* Light bottom highlight */
+
+  color: goldenrod;
+  font-weight: bold;
+  font-size: 2vh;   
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;            /* was 0.85rem */
+  display: flex;
   align-items: center;
+  justify-content: center;
+}
+ 
+
+.hand-card .card-name {
+  position: absolute;
+  top: 4%;                        /* was 0.25rem */
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: white;
+  font-size: 1vh;                 /* was 0.65rem */
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0 4%;                  /* was 0 0.25rem */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+/* ============================================================
+   DECKBOOK: study-room background + book resting on the table
+   Append this to the end of styles.css.
+   ============================================================ */
+
+/* Replace the flat color with the room photo.
+   The radial gradient softly vignettes the corners so the book pops. */
+.deckbook-app {
+  background-color: #1a1410;
+  background-image:
+    radial-gradient(ellipse 90% 75% at 50% 55%,
+      rgba(0,0,0,0) 30%, rgba(0,0,0,0.55) 100%),
+    url('desk-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-#messageLog {
-  width: 90vmin;
+/* The stage needs its own perspective so the book's tilt reads as 3D
+   instead of looking like a flat squash. */
+.deckbook-app .stage {
+  perspective: 2500px;
+  perspective-origin: 50% 30%;
+}
+
+/* Resting state: book sits on the table, tilted back to roughly match
+   the camera angle of the photo. transform-origin is below center so
+   the pivot looks like the bottom edge resting on the wood. */
+.deckbook-app .book {
+  transform-origin: center 65%;
+    top: -4rem;
+  transform: translateY(-1rem) rotateX(48deg) rotateZ(8deg) scale(0.6);
+
+  transition: transform 1s cubic-bezier(.34, .8, .3, 1),
+              filter 1s ease;
+  filter: drop-shadow(0.2rem -0.2rem 0.1rem rgba(0, 0, 0, 0.6));
+  transform-style: preserve-3d;
+}
+
+/* Hover (only matters while closed): book rises upright toward you,
+   shadow tightens as it lifts off the table. */
+.deckbook-app .book:hover {
+  transform: translateY(0) rotateX(0deg) scale(1);
+  top:0rem;
+  filter: drop-shadow(0 0.625rem 0.75rem rgba(0, 0, 0, 0.45));
+}
+
+/* Open state: stay upright AND keep the existing rightward shift that
+   makes room for the back-cover. This overrides both resting and hover. */
+.deckbook-app #checkbox-cover:checked ~ .stage .book,
+.deckbook-app #checkbox-cover:checked ~ .stage .book:hover {
+  transform: translateX(13.75rem) rotateX(0deg) scale(1);
+  filter: drop-shadow(0 0.5rem 0.75rem rgba(0, 0, 0, 0.45));
+}
+/* === BOOK COVER: use the leather image === */
+.deckbook-app .cover-front {
+  background-color: #1f3a52;                     /* fallback near the leather's blue */
+  background-image: url('book-cover.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: none;                                  /* image has its own gold border */
+}
+
+/* Stronger shadow so the gold title reads cleanly on the leather */
+.deckbook-app .cover-content h1 {
+  text-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.75);
+}
+.deckbook-app .cover-content .ornament,
+.deckbook-app .cover-content p {
+  text-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.6);
+}
+
+
+/* Book inflates toward the camera */
+.deckbook-app.entering-battle .book,
+.deckbook-app.entering-battle #checkbox-cover:checked ~ .stage .book {
+  transform: scale(6) !important;
+ transform-origin: 50% 50% !important;     /* add this */
+  transition: transform 5s cubic-bezier(.55, 0, .85, .15) !important;
+}
+
+.deckbook-app.cards-hidden .card-slot,
+.deckbook-app.cards-hidden .deck-label {
+  opacity: 0;
+  transform: scale(0.85);
+  filter: blur(4px);
+  transition: opacity 0.4s ease, transform 0.4s ease, filter 0.4s ease;
+}
+#opponentSelectScreen {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #3a4346 0%, #2e3537 50%, #1a2022 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  font-family: "Poppins", sans-serif;
+}
+
+.opponent-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.4rem;
+  color: #c5a23a;
+  text-transform: uppercase;
+  text-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.5);
+  margin-bottom: 2.5rem;
+}
+
+.opponent-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  max-width: 30rem;
+}
+
+.opponent-card {
+  background: transparent;
+  border: 0.1875rem solid rgba(197, 162, 58, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 12rem;
+  aspect-ratio: 5 / 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.opponent-card:hover {
+  border-color: #c5a23a;
+  transform: translateY(-0.25rem) scale(1.04);
+  box-shadow: 0 0.5rem 1.5rem rgba(197, 162, 58, 0.4);
+}
+.opponent-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* ===== GAME OVER OVERLAY ===== */
+/* ===== GAME OVER OVERLAY ===== */
+#gameOverScreen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;       /* stack h1 + button vertically */
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  font-family: "Poppins", sans-serif;
+  color: white;
+
+  /* Fade in when revealed */
+  animation: gameOverFadeIn 1.2s ease-out both;
+}
+
+@keyframes gameOverFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#gameOverResult {
+  font-size: 4rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  margin: 0;
+  /* Subtle pulse so the word feels heavy */
+  animation: gameOverResultIn 1.4s 0.3s ease-out both;
+}
+
+@keyframes gameOverResultIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+    letter-spacing: 0.6em;     /* starts spread, settles */
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    letter-spacing: 0.3em;
+  }
+}
+
+/* ===== RETURN BUTTON ===== */
+#gameOverReturnBtn {
+  padding: 0.85rem 2.5rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  background: linear-gradient(180deg, #d4b24a 0%, #c5a23a 50%, #a8881e 100%);
+  border: 2px solid #8a6f17;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  box-shadow:
+    0 0.25rem 0 #6b550f,        /* chunky bottom edge */
+    0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+
+  /* Delay the button so it lands AFTER the title appears */
+  animation: gameOverBtnIn 0.6s 1.2s ease-out both;
+  transition: transform 0.1s, box-shadow 0.1s, filter 0.1s;
+}
+
+#gameOverReturnBtn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow:
+    0 0.375rem 0 #6b550f,
+    0 0.625rem 1.25rem rgba(0, 0, 0, 0.6);
+}
+
+#gameOverReturnBtn:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 0.0625rem 0 #6b550f,
+    0 0.125rem 0.5rem rgba(0, 0, 0, 0.4);
+}
+
+@keyframes gameOverBtnIn {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* ===== INITIAL LOADING SCREEN ===== */
+#loadingScreen {
+  position: fixed;
+  inset: 0;
+  background: #1a2022;
+  z-index: 99999;                   /* above literally everything */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  font-family: "Poppins", sans-serif;
+  color: #f0e8d4;
+}
+
+#loadingScreen h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  margin: 0;
+  text-transform: uppercase;
+  text-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.6);
+}
+
+#loadingMessage {
+  font-size: 1rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #c5a23a;
+  animation: loadingPulse 1.4s ease-in-out infinite;
+}
+
+/* Animated trailing dots — purely cosmetic */
+#loadingMessage::after {
+  content: "";
+  display: inline-block;
+  width: 1.5em;
+  text-align: left;
+  animation: loadingDots 1.4s steps(4, end) infinite;
+}
+@keyframes loadingDots {
+  0%   { content: ""; }
+  25%  { content: "."; }
+  50%  { content: ".."; }
+  75%  { content: "..."; }
+}
+@keyframes loadingPulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+#loadingContinueBtn {
+  padding: 0.85rem 2.5rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  background: linear-gradient(180deg, #d4b24a 0%, #c5a23a 50%, #a8881e 100%);
+  border: 2px solid #8a6f17;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  box-shadow:
+    0 0.25rem 0 #6b550f,
+    0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+  animation: loadingBtnIn 0.5s ease-out both;
+  transition: transform 0.1s, filter 0.1s;
+}
+#loadingContinueBtn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+#loadingContinueBtn:active {
+  transform: translateY(2px);
+}
+
+@keyframes loadingBtnIn {
+  from { opacity: 0; transform: translateY(1rem); }
+  to   { opacity: 1; transform: translateY(0); }
 }

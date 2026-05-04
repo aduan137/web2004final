@@ -136,6 +136,7 @@ function updateSingleTroop(data, enemies, team) {
   if (data[1] <= 0) return;
     var stunned = false;
       var slowed = false;
+      var raged = false;
       if (data[0] === "royal_ghost") {
   // Track time since last attack via cooldown timer
   // When cooldown is high (>= maxCooldown - 30), recently attacked → visible
@@ -152,6 +153,35 @@ function updateSingleTroop(data, enemies, team) {
       var eff = data[23][e];
       eff[1]--;  // decrement timer
       if (eff[1] <= 0) {
+        if (eff[0] === "conditional_summon") {
+  // Format: ["conditional_summon", framesRemaining, interval, "CardName"]
+  // Only spawns if there's an enemy in sight range
+  
+  // Check if there's an enemy in range
+  var hasTarget = false;
+  for (var k = 0; k < enemies.length; k++) {
+    var ee = enemies[k];
+    if (ee[1] <= 0) continue;
+    if (ee[22] > 0) continue;
+    if (ee[35] === 1) continue;   // hidden, can't see
+    
+    var dr = ee[4] - data[4];
+    var dc = ee[5] - data[5];
+    var d = Math.sqrt(dr * dr + dc * dc) - ee[6] / 2;
+    if (d <= data[10]) {   // within sight range (data[10])
+      hasTarget = true;
+      break;
+    }
+  }
+  
+  if (hasTarget) {
+    var summonName = eff[3];
+    spawnCard(team, summonName, data[4]-1, data[5]+0.1);
+    say(team + " " + data[0] + " spawned " + summonName);
+  }
+  eff[1] = eff[2];   // reset timer regardless (so we don't burst-spawn after enemy enters range)
+  continue;          // skip splice
+}
            if (eff[0] === "summon") {
       var summonName = eff[3];
       spawnCard(team, summonName, data[4], data[5]);
@@ -164,7 +194,13 @@ function updateSingleTroop(data, enemies, team) {
   if (leapTgtIdx >= 0 && leapTgtIdx < enemies.length) {
     var leapTgt = enemies[leapTgtIdx];
     if (leapTgt[1] > 0) {
-      // Land in front of target (works for buildings AND troops)
+      // ===== Set animation fields BEFORE teleporting =====
+      data[36] = data[4];   // store old row
+      data[37] = data[5];   // store old col
+      data[38] = (data[0] === "bandit") ? 5 : 8;   // duration depends on troop
+      // ===== END animation setup =====
+      
+      // Now teleport (existing code)
       var inFrontDir = (team === "blue") ? 1 : -1;
       data[4] = leapTgt[4] + inFrontDir * (leapTgt[6] / 2 + data[6] / 2 + 0.2);
       data[5] = leapTgt[5];
@@ -191,7 +227,8 @@ function updateSingleTroop(data, enemies, team) {
   }
   data[23].splice(e, 1);
   continue;
-}if (eff[0] === "chain_dash") {
+}
+if (eff[0] === "chain_dash") {
   var hitsLeft = eff[2];
   var hitIdxs = eff[3];   // ← now an object, not a single index
   
@@ -239,6 +276,31 @@ function updateSingleTroop(data, enemies, team) {
   }
   continue;
 }
+if (eff[0] === "go_stealth") {
+  data[35] = 1;
+  say(team + " " + data[0] + " went stealth");
+  // Push a follow-up effect that turns her visible again
+  data[23].push(["go_visible", 240]);   // 180 frames = 6 sec
+  data[23].splice(e, 1);
+  continue;
+}
+if (eff[0] === "go_visible") {
+  data[35] = 0;
+  say(team + " " + data[0] + " visible again");
+  data[23].splice(e, 1);
+  continue;
+}
+if (eff[0] === "delayed_spell") {
+  // Format: ["delayed_spell", framesRemaining, "SpellCardName"]
+  var spellName = eff[2];
+  var spellIdx = getCardByName(spellName);
+  if (spellIdx !== -1) {
+    castSpell(spellIdx, data[4], data[5], team);
+  }
+  say(team + " " + data[0] + " cast " + spellName);
+  data[23].splice(e, 1);
+  continue;
+}
 
   if (eff[0] === "kamikaze") {
         var spellName = eff[3];
@@ -256,6 +318,7 @@ function updateSingleTroop(data, enemies, team) {
       // Flag active effects
       if (eff[0] === "stun") stunned = true;
        if (eff[0] === "slow") slowed = true;
+       if (eff[0] === "rage")  raged = true;
       // Future: if (eff[0] === "slow") ...
     }
   }
@@ -318,7 +381,7 @@ function updateSingleTroop(data, enemies, team) {
     data[15] = false;
   }
   // ===== Ramp reset on lost lock =====
-  if (!data[15] && (data[0] === "mighty_miner" || data[0] === "inferno_dragon")) {
+  if (!data[15] && (data[0] === "mighty_miner" || data[0] === "inferno_dragon" || data[0]==="inferno_tower")) {
     data[33] = 0;
     data[34] = -1;
   }
@@ -351,9 +414,10 @@ if (data[32] !== undefined) {
     // Other troops: charge normally
     if (data[32] < 60) data[32]++;
   }
-}
-var movementCharging = (data[0] === "prince" || data[0] === "royal_knight") && charging;
-  var charging = (data[32] >= 60); 
+} 
+var charging = (data[32] >= 60); 
+var movementCharging = (data[0] === "prince" || data[0] === "royal_knight" || data[0] ==="dark_prince") && charging;
+ 
   // --- STEP 3: Act based on target ---
   if (data[14] !== -1 && data[14] < enemies.length) {
     var tgt = enemies[data[14]];
@@ -366,11 +430,11 @@ var movementCharging = (data[0] === "prince" || data[0] === "royal_knight") && c
       attemptAttack(data, tgt, data[14], team,slowed);
     } else {
          
-      moveToward(data, tgt,slowed,movementCharging);
+      moveToward(data, tgt,slowed,movementCharging,raged);
     }
   } else {
     
-    walkDefaultPath(data, enemies,slowed,movementCharging);
+    walkDefaultPath(data, enemies,slowed,movementCharging,raged);
   }
     if (team === "blue") {
     checkTowerPull(data);
@@ -390,13 +454,14 @@ function findTargetInSight(data, enemies) {
   data[0] === "dark_prince" ||      // ← already added probably, double-check
   data[0] === "hog_rider" ||
   data[0] === "royal_hog" ||
+  
   data[0] === "princess"
 );
  
   for (var j = 0; j < enemies.length; j++) {
     var e = enemies[j];
     if (e[1] <= 0) continue;            // dead
-               // still deploying (untargetable)
+        if (e[0] === "royal_recruit" && e[22] > 0) continue;      // still deploying (untargetable)
     if (e[18] === "spell") continue;
     if ( e[35] === 1) continue; 
     
@@ -406,16 +471,24 @@ if (data[18] === "ground" && !canSeeAcrossRiver && (data[9] < 2 || data[0] === "
   if (amBlue && data[4] >= 17 && e[4] < 17) continue;       // blue still on blue side, target across the river
   if (!amBlue && data[4] <= 15 && e[4] > 15) continue;      // red still on red side, target across the river
 }
-   // spells are never targets
-
-    // Target type filter (matches original)
+   var isGrounded = false;
+if (e[23]) {
+  for (var x = 0; x < e[23].length; x++) {
+    if (e[23][x][0] === "grounded" && e[23][x][1] > 0) {
+      isGrounded = true;
+      break;
+    }
+  }
+}
+if (tt === "ground" && e[18] === "air" && !isGrounded) continue;
     if (tt === "buildings" && e[18] !== "building") continue;
     if (tt === "troops"    && e[18] === "building") continue;
-    if (tt === "ground"    && e[18] === "air")      continue;
+    
     if (tt === "air"       && e[18] !== "air" && e[18] !== "building") continue;
     // "all" matches everything
 
     var d = edgeDistance(data, e);
+    if (data[0] === "mortar" && d < 4.0) continue;
     if (d < bestDist) {
       bestDist = d;
       bestIdx = j;
@@ -442,7 +515,7 @@ function edgeDistance(a, b) {
 //   data[4] += cos(ang) * speed/spdm   (row movement)
 //   data[5] += sin(ang) * speed/spdm   (col movement)
 // ============================================================
-function moveToward(data, tgt,slowed,charging) {
+function moveToward(data, tgt,slowed,charging,raged) {
    
    if (slowed === undefined) slowed = false;
    if (data[8] === 0) return; // buildings don't move
@@ -455,7 +528,8 @@ function moveToward(data, tgt,slowed,charging) {
   var ang = Math.atan2(ydif, xdif); // radians
   var step = data[8] / SPDM;
    if (slowed) step *= 0.25; 
-     if (charging) step *= 2;   
+     if (charging) step *= 2;  
+     if (raged)   step *= 1.35; 
 
   data[4] += Math.cos(ang) * step;
   data[5] += Math.sin(ang) * step;
@@ -490,14 +564,17 @@ function faceTarget(data, tgt) {
 // Direction is determined by team: blue troops move UP (toward
 // lower row numbers, where red's side is), red troops move DOWN.
 // ============================================================
-function walkDefaultPath(data, enemies,slowed,charging) {
+function walkDefaultPath(data, enemies,slowed,charging,raged) {
   if (data[8] === 0) return;
 
   var marchingDown = (enemies === bTroops);
   var step = data[8] / SPDM;
   if (slowed) step *= 0.65;
-   if (charging) step *= 2; 
+   if (charging) step *= 2;
+   if (raged)   step *= 1.35;  
   var onLeft = data[5] < 9;
+  
+  
 
   if (marchingDown) {
     
@@ -551,7 +628,16 @@ function walkTowardPoint(data, targetRow, targetCol, step) {
 // ============================================================
 function attemptAttack(data, tgt, tgtIdx, team,slowed) {
   if (data[11] > 0) return;  // still reloading
-  data[11] = data[12];       // reset cooldown
+  data[11] = data[12];  
+       var hasRage = false;
+  if (data[23]) {
+    for (var r = 0; r < data[23].length; r++) {
+      if (data[23][r][0] === "rage") { 
+        hasRage = true; 
+        break; }
+    }
+  }
+  if (hasRage) data[11] = Math.ceil(data[11] * 0.73);
 
   var dmg = data[3];
     if (data[32] >= 60 && data[0] !== "royal_knight") {
@@ -567,7 +653,7 @@ function attemptAttack(data, tgt, tgtIdx, team,slowed) {
     dmg = Math.floor(dmg * data[20]);
   }
   // ===== RAMP-UP DAMAGE: Mighty Miner & Inferno Dragon =====
- if (data[0] === "mighty_miner" || data[0] === "inferno_dragon") {
+ if (data[0] === "mighty_miner" || data[0] === "inferno_dragon"||data[0] === "inferno_tower") {
   if (data[34] !== tgtIdx) {
     data[33] = 0;
     data[34] = tgtIdx;
@@ -577,7 +663,7 @@ function attemptAttack(data, tgt, tgtIdx, team,slowed) {
   
   // Exponential ramp: 1x at start, ~50x at full ramp
   var progress = data[33] / 30;
-  var rampMult = Math.exp(4 * progress);
+  var rampMult = Math.exp(2 * progress);
   dmg = Math.floor(dmg * rampMult);
 }
   // ===== END RAMP-UP =====
@@ -596,6 +682,76 @@ function attemptAttack(data, tgt, tgtIdx, team,slowed) {
 // ===== SPECIAL CASE: Mega Knight =====
 // ===== SPECIAL CASE: Firecracker — fires projectile with stored direction =====
 // ===== SPECIAL CASE: Bandit — leap if target is 3-5 tiles away =====
+// ===== SPECIAL CASE: Fisherman — hooks ground troops =====
+// ===== SPECIAL CASE: Skeleton King — cone melee like Mega Knight =====
+if (data[0] === "skeleton_king") {
+  if (slowed) data[11] = Math.ceil(data[11] * 1.35);
+
+  var enemiesArr = (team === "blue") ? rTroops : bTroops;
+  var coneRadius = 2.5;
+  var coneHalfAngle = 57.5 * Math.PI / 180;   // 115° total
+  var facingRad = data[16] * Math.PI / 180;
+
+  for (var j = 0; j < enemiesArr.length; j++) {
+    var e = enemiesArr[j];
+    if (e[1] <= 0) continue;
+    if (e[22] > 0) continue;
+
+    var dr = e[4] - data[4];
+    var dc = e[5] - data[5];
+    var centerDist = Math.sqrt(dr * dr + dc * dc);
+    var edgeDist = centerDist - e[6] / 2;
+    if (edgeDist > coneRadius) continue;
+
+    if (centerDist < 0.5) {
+      var enemyDmg = data[3];
+      if (j <= 2) enemyDmg = Math.floor(enemyDmg * e[20]);
+      dealDamage(e, enemyDmg);
+      say(team + " skeleton_king smashed " + e[0] + " for " + enemyDmg);
+      continue;
+    }
+
+    var angleToEnemy = Math.atan2(dc, dr);
+    var angleDiff = angleToEnemy - facingRad;
+    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+    if (Math.abs(angleDiff) > coneHalfAngle) continue;
+
+    var enemyDmg = data[3];
+    if (j <= 2) enemyDmg = Math.floor(enemyDmg * e[20]);
+    dealDamage(e, enemyDmg);
+    say(team + " skeleton_king smashed " + e[0] + " for " + enemyDmg);
+  }
+  return;
+}
+// ===== END Skeleton King =====
+
+if (data[0] === "fisherman") {
+  var dist = edgeDistance(data, tgt);
+  
+  if (dist > 1.6) {
+    // ===== Set animation fields on TARGET =====
+    tgt[36] = tgt[4];    // store target's old row
+    tgt[37] = tgt[5];    // store target's old col
+    tgt[38] = 30;         // 12 frames animation
+    // ===== END =====
+    
+    // Hook
+    var inFrontDir = (team === "blue") ? -1 : 1;
+    tgt[4] = data[4] + inFrontDir * (data[6]/2 + tgt[6]/2 + 0.5);
+    tgt[5] = data[5];
+    
+    if (!tgt[23]) tgt[23] = [];
+    tgt[23].push(["stun", 15]);
+    
+    say(team + " fisherman HOOKED " + tgt[0]);
+  } else {
+    dealDamage(tgt, dmg);
+    say(team + " fisherman hit " + tgt[0] + " for " + dmg);
+  }
+  return;
+}
+
 if (data[0] === "bandit") {
   var distToTarget = edgeDistance(data, tgt);
 
@@ -985,6 +1141,14 @@ function triggerSpawnSpell(troop, team) {
 // effects (Giant Skeleton bomb, Lava Hound pups, etc.).
 // ============================================================
 function handleDeath(troop, team) {
+  var deathSpellName = troop[29];
+  if (deathSpellName) {
+    var deathSpellIdx = getCardByName(deathSpellName);
+    if (deathSpellIdx !== -1) {
+      castSpell(deathSpellIdx, troop[4], troop[5], team);
+      say(team + " " + troop[0] + " cast " + deathSpellName + " on death");
+    }
+  }
   // Check for deathSpawn at index 26
   var deathSpawnName = troop[26];
   if (!deathSpawnName) return;

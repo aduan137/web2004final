@@ -67,6 +67,30 @@ function castSpell(cardIdx, row, col, team,facingDeg) {
       tgtCol = col;
     }
   } 
+   else if (spellType === "persistent") {
+  startRow = row;
+  startCol = col;
+  tgtRow = row;
+  tgtCol = col;
+  // Build a custom persistent spell entry
+  var spell = ["graveyard", row, col, row, col,
+               0, radius, 0, 0, [],
+               -1, 0, "persistent",
+               null, 0, 0, null, null, null,
+               270,    // [19] total lifetime in frames (9 sec)
+               0,      // [20] spawn timer (counts down to 0)
+               10,     // [21] spawn interval in frames (0.5 sec)
+               "OneSkeleton"  // [22] what to spawn
+              ];
+  if (team === "blue") {
+    
+    bActiveSpells.push(spell);
+  } else {
+    rActiveSpells.push(spell);
+  }
+  say(team + " cast graveyard at (" + row.toFixed(1) + ", " + col.toFixed(1) + ")");
+  return;
+}
   
   
   else if (speed === 0) {
@@ -129,6 +153,29 @@ function updateSpellArray(arr, enemies, team) {
       if (s[10] <= 0) arr.splice(i, 1);
       continue;
     }
+     if (s[12] === "persistent") {
+      // s[19] = lifetime, s[20] = spawn timer, s[21] = spawn interval, s[22] = spawn name
+      
+      s[19]--;   // tick lifetime
+      s[20]--;   // tick spawn timer
+      
+      if (s[20] <= 0) {
+        // Spawn one skeleton at random point in radius
+        var angle = Math.random() * 2 * Math.PI;
+        var dist = Math.random() * s[6];   // s[6] = radius
+        var spawnRow = s[1] + Math.cos(angle) * dist;
+        var spawnCol = s[2] + Math.sin(angle) * dist;
+        spawnCard(team, s[22], spawnRow, spawnCol);
+        s[20] = s[21];   // reset spawn timer
+        say(team + " graveyard summoned skeleton");
+      }
+      
+      if (s[19] <= 0) {
+        // Lifetime done, remove spell
+        arr.splice(i, 1);
+      }
+      continue;
+    }
 
 
     if (s[12] === "rolling") {
@@ -143,6 +190,10 @@ function updateSpellArray(arr, enemies, team) {
       var dist = Math.sqrt(dr * dr + dc * dc);
       var stepLen = s[7] / SPDM;
 if (dist <= stepLen) {
+   if (s[0] === "barbarian_barrel") {
+    spawnCard(team, "Barbarian", s[3], s[4]);
+    say(team + " barbarian_barrel spawned Barbarian");
+  }
   arr.splice(i, 1);   // remove the spell entirely, no impact flash
   continue;
 }
@@ -217,8 +268,7 @@ if (s[12] === "piercing") {
     if (s[13][j]) continue;
     var e = enemies[j];
     if (e[1] <= 0) continue;
-    if (e[18] === "air") continue;
-    if (e[18] === "building") continue;
+    
 
     var distRow = Math.abs(e[4] - s[1]);
     var distCol = Math.abs(e[5] - s[2]);
@@ -278,15 +328,117 @@ function applySpellDamage(s, enemies, team) {
   var radius  = s[6];
   var penalty = s[8];
   var effects = s[9];
-
+  if (s[0] === "lightning") {
+  var radius = s[6];
+  var dmg = s[5];
+  var hitX = s[3];   // tgtRow
+  var hitY = s[4];   // tgtCol
+  var effects = s[9];
+  
+  // Find all enemies in radius
+  var candidates = [];
   for (var j = 0; j < enemies.length; j++) {
     var e = enemies[j];
     if (e[1] <= 0) continue;
+    if (e[35] === 1) continue;
+    // Lightning hits ground only? real Clash hits air too — change as desired
+    
+    var dr = e[4] - hitX;
+    var dc = e[5] - hitY;
+    var d = Math.sqrt(dr * dr + dc * dc) - e[6] / 2;
+    if (d <= radius) {
+      candidates.push({ idx: j, troop: e, hp: e[1] });
+    }
+  }
+  
+  // Sort by HP descending — highest HP gets zapped first
+  candidates.sort(function(a, b) { return b.hp - a.hp; });
+  
+  // Zap top 3
+  var maxHits = 3;
+  for (var i = 0; i < Math.min(maxHits, candidates.length); i++) {
+    var c = candidates[i];
+    var enemyDmg = dmg;
+    if (c.idx <= 2) enemyDmg = Math.floor(enemyDmg * c.troop[20]);
+    dealDamage(c.troop, enemyDmg);
+    say(team + " lightning zapped " + c.troop[0] + " for " + enemyDmg);
+    
+    // Apply stun
+    if (effects && effects.length > 0) {
+      if (!c.troop[23]) c.troop[23] = [];
+      for (var k = 0; k < effects.length; k++) {
+        c.troop[23].push(effects[k].slice());
+      }
+    }
+  }
+  
+  return;
+}
+if (s[0] === "goblin_barrel") {
+  var hitX = s[3];   // tgtRow
+  var hitY = s[4];   // tgtCol
+  var triangleRadius = s[6];   // 2.5
+  
+  // Triangle vertices: 120° apart
+  var angles = [Math.PI / 2, Math.PI / 2 + 2 * Math.PI / 3, Math.PI / 2 + 4 * Math.PI / 3];
+  for (var i = 0; i < 3; i++) {
+    var a = angles[i];
+    var goblinRow = hitX + Math.cos(a) * triangleRadius;
+    var goblinCol = hitY + Math.sin(a) * triangleRadius;
+    spawnCard(team, "OneGoblin", goblinRow, goblinCol);
+  }
+  say(team + " goblin_barrel spawned 3 goblins");
+  return;
+}
 
+  if (s[0] === "rage") {
+    var radius = s[6];
+    var dmg = s[5];
+    var hitX = s[1];   // row of impact
+    var hitY = s[2];   // col of impact
+    
+    // Damage enemies in radius
+    for (var j = 0; j < enemies.length; j++) {
+      var e = enemies[j];
+      if (e[1] <= 0) continue;
+      if (e[35] === 1) continue;
+      var dr = e[4] - hitX;
+      var dc = e[5] - hitY;
+      var d = Math.sqrt(dr * dr + dc * dc) - e[6] / 2;
+      if (d <= radius) {
+        var enemyDmg = dmg;
+        if (j <= 2) enemyDmg = Math.floor(enemyDmg * e[20]);
+        dealDamage(e, enemyDmg);
+        say(team + " rage hit " + e[0] + " for " + enemyDmg);
+      }
+    }
+    
+    // Apply rage buff to friendly troops in radius
+    var friendlies = (team === "blue") ? bTroops : rTroops;
+    for (var k = 0; k < friendlies.length; k++) {
+      var f = friendlies[k];
+      if (f[1] <= 0) continue;
+      if (f[18] === "building") continue;   // buildings don't get raged
+      var dr = f[4] - hitX;
+      var dc = f[5] - hitY;
+      var d = Math.sqrt(dr * dr + dc * dc) - f[6] / 2;
+      if (d <= radius) {
+        if (!f[23]) f[23] = [];
+        f[23].push(["rage", 180]);   // 180 frames = 6 sec
+        say(team + " rage buffed " + f[0]);
+      }
+    }
+    
+    return;
+  }
+  for (var j = 0; j < enemies.length; j++) {
+    var e = enemies[j];
+    
     // Edge distance (center-to-center minus target radius)
     var dr = e[4] - tgtRow;
     var dc = e[5] - tgtCol;
     var d = Math.sqrt(dr * dr + dc * dc) - e[6] / 2;
+    
 
     if (d <= radius) {
       var dmg = damage;
@@ -321,8 +473,16 @@ function drawSpellArray(arr, team) {
     var x = tileToPx(s[2]);
     var y = tileToPx(s[1]);
     if (s[11] > 0 && s[0] === "royal_delivery_impact") continue;
+    if (s[11] > 0 && s[0] === "mega_knight_slam") continue;
 
-    // Rolling spell — Log is a rectangle, others are circles
+    if (s[12] === "persistent" && s[0] === "graveyard") {
+  push();
+  noStroke();
+  fill(80, 40, 100, 80);   // purple, semi-transparent
+  ellipse(tileToPx(s[2]), tileToPx(s[1]), s[6] * 2 * TILE_SIZE, s[6] * 2 * TILE_SIZE);
+  pop();
+  continue;
+}
     if (s[12] === "rolling") {
       var d = s[6] * 2 * TILE_SIZE;
 

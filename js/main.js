@@ -14,7 +14,7 @@
 // The original engine ran the battle loop immediately on load.
 // We gate the game loop behind a phase flag so we can show the
 // deck-select screen first, then transition into battle.
-var gamePhase = "battle";  // "deckSelect" | "battle" | "gameOver"
+var gamePhase = "deckSelect";  // "deckSelect" | "battle" | "gameOver"
 
 // Frame counter (used by the original for timing / animations / the log)
 var frame = 0;
@@ -49,7 +49,7 @@ function preload() {
 // setup() — runs once, automatically, when p5.js is ready
 // ============================================================
 function setup() {
-  var canvas = createCanvas(600, 600);
+  var canvas = createCanvas(290, 520);
   canvas.parent("gameContainer");
 
   frameRate(30);
@@ -112,6 +112,7 @@ function startBattle(selectedDeck) {
 // Most of these will be stubs until we build their .js files.
 // ============================================================
 function draw() {
+  
   // Don't run the battle loop until the player hits Start.
   if (gamePhase !== "battle") return;
 
@@ -132,8 +133,11 @@ function draw() {
   // ---- RENDER PHASE ----
   background(200, 200, 200);
 
+  
+
   if (typeof drawArena === "function")  drawArena();
   else                                  drawArenaPlaceholder();
+
 
   if (typeof drawTroops === "function")       drawTroops();
   if (typeof drawProjectiles === "function")  drawProjectiles();
@@ -222,3 +226,50 @@ function drawCursor() {
   ellipse(mouseX, mouseY, 10, 10);
   ellipse(mouseX, mouseY, 1, 1);
 }
+function checkGameOver() {
+  // bTroops[0] is by convention the player king tower. Verify by name
+  // so this still works if the array is ever reordered.
+  var pKing = bTroops[0];
+  if (pKing && pKing[0] === "KING" && pKing[1] <= 0) {
+    endBattle("loss");
+  }
+}
+
+function endBattle(result) {
+  if (gamePhase === "gameOver") return;   // don't re-trigger every frame
+  gamePhase = "gameOver";
+  document.getElementById('gameOverScreen').style.display = 'flex';
+  document.getElementById('gameOverResult').textContent =
+    result === "win" ? "VICTORY" : "DEFEAT";
+}
+
+function returnToDeckSelect() {
+  // Hide battle + game over
+  document.getElementById('gameOverScreen').style.display = 'none';
+  document.getElementById('battleScreen').style.display = 'none';
+
+  // Reset the deckbook so the next page-flip animation plays from a
+  // clean closed state. Without this, the cover would still be open
+  // and the entering-battle classes would still be applied.
+  var deckbook = document.getElementById('deckSelectScreen');
+  deckbook.classList.remove('entering-battle', 'cards-hidden');
+  document.getElementById('checkbox-cover').checked = false;
+  document.getElementById('checkbox-page1').checked = false;
+  document.getElementById('checkbox-page2').checked = false;
+
+  // The Battle button got hidden when we left the deckbook — bring it back
+  document.getElementById('placeholderBattleBtn').style.display = '';
+
+  // Show the deckbook and reset game state for the next match
+  deckbook.style.display = '';
+  if (typeof resetState === "function") resetState();
+  if (typeof resetWaves === "function") resetWaves();
+
+  gamePhase = "deckSelect";
+}
+
+// Wire up the button once the DOM is ready
+document.addEventListener("DOMContentLoaded", function () {
+  var btn = document.getElementById("gameOverReturnBtn");
+  if (btn) btn.addEventListener("click", returnToDeckSelect);
+});

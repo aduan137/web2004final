@@ -7,6 +7,12 @@
 
   <link rel="stylesheet" href="styles.css" />
 
+
+  <!-- Poppins font for the deckbook -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
   <!-- p5.js: lets us use Processing-style functions (draw, fill, rect, ellipse, etc.)
        in a plain browser. The original engine was written in Processing.js, and p5.js
        is the modern equivalent, so almost all of the original code will port over. -->
@@ -14,42 +20,196 @@
 </head>
 
 <body>
+  <div id="loadingScreen">
+  <h1>Clash Defense Trainer</h1>
+  <div id="loadingMessage">Loading</div>
+  <button id="loadingContinueBtn" style="display: none;">Continue</button>
+</div>
+     <button id="placeholderBattleBtn">Battle</button>
+     <div id="loadingOverlay"></div>
 
-  <!-- === DECK SELECT SCREEN ===
-       Shown before the battle starts. We'll populate the card pool from JS later. -->
-  <div id="deckSelectScreen">
-    <h1>Defense Trainer</h1>
-    <p>Pick 8 cards for your deck:</p>
-    <div id="cardPool"><!-- filled in by js/ui.js --></div>
-    <p id="deckCount">0 / 8 selected</p>
-    <button id="startBtn" disabled>Start Battle</button>
+  <!-- === DECK SELECT SCREEN (the deckbook) ===
+       Replaces the old simple list. Styles live in deckbook.css,
+       logic lives in js/book.js — both scoped so they don't bleed
+       into the rest of the page or the game globals. -->
+  <div class="deckbook-app" id="deckSelectScreen">
+
+    <input type="checkbox" id="checkbox-cover">
+    <input type="checkbox" id="checkbox-page1">
+    <input type="checkbox" id="checkbox-page2">
+
+    <div class="stage" id="stage">
+      <div class="book">
+        <!-- COVER: front face (decorative) + back face (Deck I left half) -->
+        <div class="cover">
+          <label class="cover-face cover-front" for="checkbox-cover">
+            <div class="cover-content">
+              <h1>DECK<br>TOMVS</h1>
+              <div class="ornament">✦ ✦ ✦</div>
+              <p>open</p>
+            </div>
+          </label>
+          <div class="cover-face cover-back">
+            <span class="deck-label left">Deck I</span>
+            <div class="deck-half" data-deck="0" data-side="left">
+              <div class="card-slot" data-slot="0"></div>
+              <div class="card-slot" data-slot="1"></div>
+              <div class="card-slot" data-slot="2"></div>
+              <div class="card-slot" data-slot="3"></div>
+            </div>
+            <label class="prev" for="checkbox-cover">‹</label>
+          </div>
+        </div>
+
+        <!-- PAGE 1: front = Deck I right, back = Deck II left -->
+        <div class="page" id="page1">
+          <div class="front-page">
+            <span class="deck-label right">Deck I</span>
+            <div class="deck-half" data-deck="0" data-side="right">
+              <div class="card-slot" data-slot="4"></div>
+              <div class="card-slot" data-slot="5"></div>
+              <div class="card-slot" data-slot="6"></div>
+              <div class="card-slot" data-slot="7"></div>
+            </div>
+            <label class="next" for="checkbox-page1">›</label>
+          </div>
+          <div class="back-page">
+            <span class="deck-label left">Deck II</span>
+            <div class="deck-half" data-deck="1" data-side="left">
+              <div class="card-slot" data-slot="0"></div>
+              <div class="card-slot" data-slot="1"></div>
+              <div class="card-slot" data-slot="2"></div>
+              <div class="card-slot" data-slot="3"></div>
+            </div>
+            <label class="prev" for="checkbox-page1">‹</label>
+          </div>
+        </div>
+
+        <!-- PAGE 2: front = Deck II right, back = Deck III left -->
+        <div class="page" id="page2">
+          <div class="front-page">
+            <span class="deck-label right">Deck II</span>
+            <div class="deck-half" data-deck="1" data-side="right">
+              <div class="card-slot" data-slot="4"></div>
+              <div class="card-slot" data-slot="5"></div>
+              <div class="card-slot" data-slot="6"></div>
+              <div class="card-slot" data-slot="7"></div>
+            </div>
+            <label class="next" for="checkbox-page2">›</label>
+          </div>
+          <div class="back-page">
+            <span class="deck-label left">Deck III</span>
+            <div class="deck-half" data-deck="2" data-side="left">
+              <div class="card-slot" data-slot="0"></div>
+              <div class="card-slot" data-slot="1"></div>
+              <div class="card-slot" data-slot="2"></div>
+              <div class="card-slot" data-slot="3"></div>
+            </div>
+            <label class="prev" for="checkbox-page2">‹</label>
+          </div>
+        </div>
+
+        <!-- PAGE 3: front = Deck III right, back = end of book -->
+        <div class="page" id="page3">
+          <div class="front-page">
+            <span class="deck-label right">Deck III</span>
+            <div class="deck-half" data-deck="2" data-side="right">
+              <div class="card-slot" data-slot="4"></div>
+              <div class="card-slot" data-slot="5"></div>
+              <div class="card-slot" data-slot="6"></div>
+              <div class="card-slot" data-slot="7"></div>
+            </div>
+          </div>
+          <div class="back-page end-page">end of tome</div>
+        </div>
+
+        <div class="back-cover"></div>
+      </div>
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <h3>The Grimoire</h3>
+          <button class="close-btn" id="closeSidebar" aria-label="Close">×</button>
+        </div>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search cards…">
+      
+      </div>
+      <div class="suggested-decks-section" id="suggestedDecksSection">
+  <button class="suggested-toggle" id="suggestedToggle">
+    <span>Decks that current top players use:</span>
+    <span class="toggle-arrow">▾</span>
+  </button>
+  <div class="suggested-decks-list" id="suggestedDecksList"></div>
+</div>
+      <div class="card-list" id="cardList"></div>
+    </aside>
+
   </div>
+
+  <div id="opponentSelectScreen" style="display: none;">
+  <h2 class="opponent-title">Choose Your Opponent</h2>
+  <div class="opponent-grid">
+    <button class="opponent-card" data-ai-deck="0" data-card="Balloon">
+      <img id="opponentImg0" alt="Balloon">
+    </button>
+    <button class="opponent-card" data-ai-deck="1" data-card="P.E.K.K.A.">
+      <img id="opponentImg1" alt="P.E.K.K.A.">
+    </button>
+    <button class="opponent-card" data-ai-deck="2" data-card="Golem">
+      <img id="opponentImg2" alt="Golem">
+    </button>
+    <button class="opponent-card" data-ai-deck="3" data-card="Goblin Barrel">
+      <img id="opponentImg3" alt="Goblin Barrel">
+    </button>
+  </div>
+</div>
 
   <!-- === BATTLE SCREEN ===
        Hidden until deck select is done. p5.js will inject the <canvas>
        into #gameContainer when we call createCanvas(600, 600) in setup(). -->
-  <div id="battleScreen" style="display: none;">
+ <div id="battleScreen" style="display: none;">
+  <div class="battle-layout">
+    
     <div id="gameContainer" class="scaled-canvas"></div>
-
-    <!-- Optional: a message log area outside the canvas, mirroring the original's `say()` system.
-         You could also draw this inside the canvas — up to you. -->
-    <div id="messageLog"></div>
+    <div class="side-panel">
+      <div class="card-grid">
+        <div class="hand-card" data-slot="0"></div>
+        <div class="hand-card" data-slot="1"></div>
+        <div class="hand-card" data-slot="2"></div>
+        <div class="hand-card" data-slot="3"></div>
+      </div>
+    </div>
   </div>
+ 
+</div>
+<div id="gameOverScreen" style="display: none;">
+  
+    <h1 id="gameOverResult">DEFEAT</h1>
+    <button id="gameOverReturnBtn">Return to Deckbook</button>
+  
+</div>
+
 
   <!-- === SCRIPTS ===
        Load order matters! Each file declares global `var`s that later files depend on.
        Rule of thumb: data → state → logic → rendering → input → main.
        p5.js automatically calls setup() and draw() once main.js defines them. -->
-  <script src="js/cards.js"></script>   
+  
+  
+  <script src="js/cards.js"></script>
+       <script src="book.js"></script>        <!-- deckbook UI (deck select screen) -->
+  
   <script src="js/spells.js"></script>      <!-- card definitions + cardsInit() -->
-  <script src="js/state.js"></script>        <!-- bTroops, rTroops, elixir, etc. -->
-  <script src="js/troops.js"></script>       <!-- troop update: targeting, movement, attack -->
-  <script src="js/projectiles.js"></script>  <!-- projectile update + collision -->
-  <script src="js/render.js"></script>       <!-- drawArena, drawTroops, drawUI -->
-  <script src="js/input.js"></script>        <!-- mousePressed, placement validation -->
-  <script src="js/waves.js"></script>        <!-- enemy wave generator (replaces red player) -->
-  <script src="js/ui.js"></script>           <!-- deck select screen (HTML side) -->
-  <script src="js/main.js"></script>         <!-- setup() and draw() — orchestrates everything -->
+  <script src="js/state.js"></script>       <!-- bTroops, rTroops, elixir, etc. -->
+  <script src="js/troops.js"></script>      <!-- troop update: targeting, movement, attack -->
+  <script src="js/projectiles.js"></script> <!-- projectile update + collision -->
+  <script src="js/render.js"></script>      <!-- drawArena, drawTroops, drawUI -->
+  <script src="js/input.js"></script>       <!-- mousePressed, placement validation -->
+  <script src="js/waves.js"></script>       <!-- enemy wave generator (replaces red player) -->
+  <script src="js/ui.js"></script>          <!-- deck select screen (HTML side) -->
+  <script src="js/main.js"></script>        <!-- setup() and draw() — orchestrates everything -->
 
 </body>
 </html>

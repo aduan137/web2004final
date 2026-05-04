@@ -15,9 +15,9 @@
 
 // ---- ARENA CONSTANTS ----
 // The arena rectangle in pixel coordinates (matches the original).
-var TILE_SIZE = 15;
-var ARENA_PX_X =10;        // left edge of arena, in pixels
-var ARENA_PX_Y = 10;         // top edge of arena, in pixels
+var TILE_SIZE = 16;
+var ARENA_PX_X =1;        // left edge of arena, in pixels
+var ARENA_PX_Y = 1;         // top edge of arena, in pixels
 var ARENA_TILES_W = 18;
 var ARENA_TILES_H = 32;
 var bConeFlashes = [];
@@ -109,11 +109,11 @@ function say(txt) {
 function makeTower(kind, x, y, facingAngle) {
   if (kind === "king") {
     // King tower: 4008 HP, slightly bigger, shoots every 1 sec (30 frames)
-    return ["ctower", 4008, 4008, 90, x, y, 2.8, 0, 0, 7, 7, 0, 30, 15,
+    return ["KING", 4008, 4008, 90, x, y, 2.8, 0, 0, 7, 7, 0, 30, 15,
             -1, false, 180, 0, "building", "all", 1, 0, 0, []];
   } else {
     // Princess tower: 2534 HP, smaller, shoots every 0.8 sec (24 frames)
-    return ["ptower", 2534, 2534, 90, x, y, 2, 0, 0, 7.5, 7.5, 0, 24, 30,
+    return ["", 2534, 2534, 90, x, y, 2, 0, 0, 7.5, 7.5, 0, 24, 30,
             -1, false, facingAngle, 0, "building", "all", 1, 0, 0, []];
   }
 }

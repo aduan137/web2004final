@@ -1,35 +1,26 @@
-// ============================================================
-// input.js — mouse input, card placement, and hand UI
-// ------------------------------------------------------------
-// Handles:
-//   - Clicking a card in your hand to select it
-//   - Clicking on the arena to place the selected card
-//   - Elixir cost deduction
-//   - Hand cycling (played card → end of queue, next card slides in)
-//   - Placement validation (only on your half of the arena)
-//   - Drawing the elixir bar, hand, and placement preview
-// ============================================================
 
-
-// ---- LAYOUT CONSTANTS ----
-// The arena ends at y = 60 + 32*15 = 540. That leaves y=540–600
-// for UI. We use 60 pixels: 8 for elixir bar, 52 for card hand.
-var ELIXIR_BAR_Y = 482;   // was 542
-var ELIXIR_BAR_H = 8;
-var HAND_Y = 492;
-var HAND_H = 46;
+var SIDE_PANEL_X = 290;
 var HAND_CARD_W = 62;
+var HAND_H = 62;
 var HAND_CARD_GAP = 5;
+var HAND_Y = 350;
+var ELIXIR_BAR_X = 0;
+var ELIXIR_BAR_Y = 510
+var ELIXIR_BAR_W = 290
+var ELIXIR_BAR_H = 10
 
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.hand-card').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var slot = parseInt(el.dataset.slot, 10);
+      if (slot >= bOrder.length) return;
+      var cardIdx = bDeck[bOrder[slot]];
+      if (cardIdx === undefined || cardIdx === null) return;
+      bSel = (bSel === slot) ? -1 : slot;
+    });
+  });
+});
 
-// ============================================================
-// ensureDefaultDeck()
-// ------------------------------------------------------------
-// If the player hasn't picked a deck via the deck-select screen
-// (which we haven't built yet), auto-assign the first 8 cards
-// so the game is testable. This keeps the dev shortcut of
-// `gamePhase = "battle"` in main.js working.
-// ============================================================
 function ensureDefaultDeck() {
   if (bDeck.length >= 8) return;
   bDeck = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -38,32 +29,15 @@ function ensureDefaultDeck() {
 }
 
 
-// ============================================================
-// mousePressed() — p5.js auto-calls this on every click.
-// Routes the click to either the hand or the arena.
-// ============================================================
+
 function mousePressed() {
   if (gamePhase !== "battle") return;
 
-  var mx = mouseX;
-  var my = mouseY;
-
-  // Hand area?
-  if (my >= HAND_Y && my <= HAND_Y + HAND_H) {
-    var slot = getHandSlotAtX(mx);
-    if (slot !== -1) {
-      // Toggle: click same slot to deselect
-      bSel = (bSel === slot) ? -1 : slot;
-    }
-    return;
-  }
-
-  // Arena?
   var arenaRight = ARENA_PX_X + ARENA_TILES_W * TILE_SIZE;
   var arenaBottom = ARENA_PX_Y + ARENA_TILES_H * TILE_SIZE;
-  if (mx >= ARENA_PX_X && mx <= arenaRight &&
-      my >= ARENA_PX_Y && my <= arenaBottom) {
-    tryPlaceSelectedCard(mx, my);
+  if (mouseX >= ARENA_PX_X && mouseX <= arenaRight &&
+      mouseY >= ARENA_PX_Y && mouseY <= arenaBottom) {
+    tryPlaceSelectedCard(mouseX, mouseY);
   }
 }
 
@@ -71,13 +45,7 @@ function mousePressed() {
 // ============================================================
 // getHandSlotAtX(px) → slot index (0-3) or -1
 // ============================================================
-function getHandSlotAtX(px) {
-  for (var slot = 0; slot < 4; slot++) {
-    var x = ARENA_PX_X + slot * (HAND_CARD_W + HAND_CARD_GAP);
-    if (px >= x && px <= x + HAND_CARD_W) return slot;
-  }
-  return -1;
-}
+
 function isValidSpellPlacement(row, col) {
   if (row < 0.5 || row > 31.5) return false;
   if (col < 0.5 || col > 17.5) return false;
@@ -125,6 +93,8 @@ if (isSpellCard(cardIdx)) {
   var templates = cards[cardIdx][3];
   for (var i = 0; i < templates.length; i++) {
     var t = deepCopyTroop(templates[i]);
+    var rawName = cards[cardIdx][0];
+t[39] = SPRITE_ALIASES[rawName] || rawName;
      t[4] = -t[4];      
     t[4] = row + t[4];    // apply spawn offset (row)
     t[5] = col + t[5];    // apply spawn offset (col)
@@ -186,7 +156,7 @@ if (row + bounds.minRow < 18) return false;     // can't place above row 14
     if (t[1] <= 0) continue;
     var drow = Math.abs(t[4] - row);
     var dcol = Math.abs(t[5] - col);
-    if (drow < 1 && dcol < 1) return false;
+    if (drow < 0.2 && dcol < 0.2) return false;
   }
   return true;
 }
@@ -212,7 +182,7 @@ function cycleHand(slot) {
 function drawUI() {
   ensureDefaultDeck();
   drawElixirBar();
-  drawHand();
+  renderHandHTML(); 
   drawPlacementPreview();
 }
 
@@ -221,33 +191,27 @@ function drawUI() {
 // drawElixirBar()
 // ============================================================
 function drawElixirBar() {
-  var barW = ARENA_TILES_W * TILE_SIZE;
-
-  // Background
   noStroke();
   fill(30, 30, 50);
-  rect(ARENA_PX_X, ELIXIR_BAR_Y, barW, ELIXIR_BAR_H);
+  rect(ELIXIR_BAR_X, ELIXIR_BAR_Y, ELIXIR_BAR_W, ELIXIR_BAR_H);
 
-  // Fill (magenta like real Clash)
   fill(200, 60, 200);
   var pct = elixir / maxE;
-  rect(ARENA_PX_X, ELIXIR_BAR_Y, barW * pct, ELIXIR_BAR_H);
+  rect(ELIXIR_BAR_X, ELIXIR_BAR_Y, ELIXIR_BAR_W * pct, ELIXIR_BAR_H);
 
-  // Divisions every 1 elixir (subtle tick marks)
   stroke(0, 0, 0, 80);
   strokeWeight(1);
   for (var i = 1; i < maxE; i++) {
-    var x = ARENA_PX_X + (barW * i / maxE);
+    var x = ELIXIR_BAR_X + (ELIXIR_BAR_W * i / maxE);
     line(x, ELIXIR_BAR_Y, x, ELIXIR_BAR_Y + ELIXIR_BAR_H);
   }
   noStroke();
 
-  // Current elixir text
   fill(255);
-  textAlign(LEFT, CENTER);
-  textSize(9);
+  textAlign(CENTER, CENTER);
+  textSize(10);
   text(Math.floor(elixir) + " / " + maxE,
-       ARENA_PX_X + 4, ELIXIR_BAR_Y + ELIXIR_BAR_H / 2);
+       ELIXIR_BAR_X + ELIXIR_BAR_W / 2, ELIXIR_BAR_Y + ELIXIR_BAR_H / 2);
   textAlign(LEFT, BASELINE);
   textSize(10);
 }
@@ -256,56 +220,8 @@ function drawElixirBar() {
 // ============================================================
 // drawHand() — draws the 4 card slots.
 // ============================================================
-function drawHand() {
-  for (var slot = 0; slot < 4; slot++) {
-    drawHandCard(slot);
-  }
-}
 
-function drawHandCard(slot) {
-  if (slot >= bOrder.length) return;
-  var cardIdx = bDeck[bOrder[slot]];
-  if (cardIdx === undefined || cardIdx === null) return;
 
-  var x = ARENA_PX_X + slot * (HAND_CARD_W + HAND_CARD_GAP);
-  var y = HAND_Y;
-  var selected = (bSel === slot);
-  var cost = getCardCost(cardIdx);
-  var affordable = elixir >= cost;
-
-  // Background
-  noStroke();
-  if (selected)        fill(200, 160, 60);    // gold
-  else if (!affordable) fill(40, 40, 55);     // dim
-  else                 fill(70, 70, 130);     // normal
-
-  rect(x, y, HAND_CARD_W, HAND_H);
-
-  // Border (thicker if selected)
-  stroke(selected ? 255 : 20);
-  strokeWeight(selected ? 2.5 : 1);
-  noFill();
-  rect(x, y, HAND_CARD_W, HAND_H);
-  noStroke();
-
-  // Card name (centered top)
-  fill(255);
-  textAlign(CENTER, CENTER);
-  textSize(9);
-  var name = getCardName(cardIdx);
-  if (name.length > 11) name = name.substring(0, 10) + ".";
-  text(name, x + HAND_CARD_W / 2, y + HAND_H / 2 - 5);
-
-  // Cost (centered bottom, colored by affordability)
-  fill(affordable ? color(220, 100, 255) : color(120, 60, 120));
-  textSize(14);
-  textStyle(BOLD);
-  text(cost, x + HAND_CARD_W / 2, y + HAND_H - 10);
-  textStyle(NORMAL);
-
-  textAlign(LEFT, BASELINE);
-  textSize(10);
-}
 
 
 // ============================================================
@@ -344,7 +260,7 @@ noStroke();
 if (isSpell) {
   var aoe = cards[cardIdx][3][0][2];
   var d = aoe * 2 * TILE_SIZE;
-  if (valid) fill(255, 140, 40, 100);
+  if (valid) fill(100, 255, 100, 100);
   else       fill(255, 80, 80, 100);
   ellipse(ghostX, ghostY, d, d);
 } else {
@@ -361,4 +277,53 @@ if (!isSpell && valid) {
        ARENA_TILES_W * TILE_SIZE,
        tileToPx(32) - tileToPx(17));
 }
+}
+// ============================================================
+// renderHandHTML() — populates the .hand-card divs based on
+// the current bOrder / bDeck. Called every frame from drawUI().
+// ------------------------------------------------------------
+// We rebuild the cards' contents (img + cost + name + classes)
+// each frame because elixir affordability changes constantly.
+// The DOM elements themselves stay — we just update their innards.
+// ============================================================
+function renderHandHTML() {
+  for (var slot = 0; slot < 4; slot++) {
+    var el = document.querySelector('.hand-card[data-slot="' + slot + '"]');
+    if (!el) continue;
+
+    if (slot >= bOrder.length) {
+      el.innerHTML = '';
+      el.className = 'hand-card';
+      continue;
+    }
+
+    var cardIdx = bDeck[bOrder[slot]];
+    if (cardIdx === undefined || cardIdx === null) {
+      el.innerHTML = '';
+      el.className = 'hand-card';
+      continue;
+    }
+
+    var cardName = cards[cardIdx][0];
+    var cost = getCardCost(cardIdx);
+    var affordable = elixir >= cost;
+    var selected = (bSel === slot);
+
+    // Update classes
+    el.className = 'hand-card';
+    if (selected)    el.classList.add('selected');
+    if (!affordable) el.classList.add('unaffordable');
+
+    // Only rebuild innerHTML if this card slot's content actually changed
+    // (avoids reflow every frame for unchanged cards)
+    var stamp = cardName + '|' + cost;
+    if (el.dataset.stamp !== stamp) {
+      el.dataset.stamp = stamp;
+      var imgHTML = sprites[cardName]
+        ? '<img src="' + sprites[cardName].canvas.toDataURL() + '" alt="' + cardName + '">'
+        : '<div class="card-name">' + cardName + '</div>';
+      el.innerHTML = imgHTML +
+        '<div class="card-cost">' + cost + '</div>';
+    }
+  }
 }

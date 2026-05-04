@@ -37,6 +37,66 @@
 
 
 var cards = [
+  ["OneGoblin", "common", 0, [
+  ["goblin", 140, 140, 100, 0, 0, 0.4, 1, 90,
+   0.5, 5.5, 0, 33, -1, -1, false, 0, 0,
+   "ground", "ground", 1, 30, 30, []]
+]],
+["Goblin Barrel", "epic", 3, [
+  ["goblin_barrel",
+   0,           // [1] no damage
+   1.4,         // [2] radius (used for triangle size)
+   600,         // [3] speed (flies like a fireball)
+   1,           // [4] crown penalty (n/a)
+   [],          // [5] effects
+   0            // [6] preLand
+  ]
+], "spell"],
+  ["Vines", "epic", 3, [
+  ["vines",
+   80, 3.0, 0, 0.35,
+   [["stun", 120], ["grounded", 120]],
+   1
+  ]
+], "spell"],
+  ["Lightning", "epic", 6, [
+  ["lightning",
+   1000,         // [1] damage per zap
+   4,         // [2] radius (search area)
+   0,           // [3] speed (instant)
+   0.35,        // [4] crown penalty
+   [["stun", 15]],  // [5] effects: 0.5 sec stun on hit
+   1            // [6] preLand
+  ]
+], "spell"],
+  ["Fisherman", "legendary", 3, [
+  ["fisherman", 700, 700, 160, 0, 0, 0.8, 4, 60,
+   7.0, 7.5, 0, 36, -1, -1, false, 0, 0,
+   "ground", "ground", 1, 30, 30, []]
+]],
+["Rocket", "rare", 6, [
+  ["rocket",
+   1300,         // [1] damage
+   2.0,         // [2] radius
+   200,         // [3] speed (slow — Fireball is probably ~600-800)
+   0.35,        // [4] crown penalty
+   [],          // [5] effects (none)
+   0            // [6] preLand
+  ]
+], "spell"],
+["Rage", "epic", 3, [
+  ["rage",
+   90, 5.0, 0, 0.35, [],
+   1
+  ]
+], "spell"],
+["Freeze", "epic", 4, [
+  ["freeze",
+   80, 3.0, 0, 0.35,
+   [["stun", 120]],
+   1
+  ]
+], "spell"],
   ["ThreeGoblins", "common", 0, [
   ["goblin", 140, 140, 100, 0, -0.4, 0.4, 1, 90,
    0.5, 5.5, 0, 33, -1, -1, false, 0, 0,
@@ -59,7 +119,7 @@ var cards = [
 ]],
 ["Royal Ghost", "legendary", 3, [
   ["royal_ghost", 1100, 1100, 200, 0, 0, 1.0, 4, 60,
-   1.6, 5.5, 0, 45, -1, -1, false, 0, 1.0,
+   1.6, 5.5, 0, 45, -1, -1, false, 0, 0,
    "ground", "ground", 1, 30, 30, [],
    [], null, null, false, false, null,
    0, 0, 0, 0, -1,
@@ -84,13 +144,20 @@ var cards = [
    [["slow", 75]]   // ← onHitEffects: slow target for 2.5 sec
   ]
 ]],
-["Royal Knight", "rare", 4, [
+["Golden Knight", "rare", 4, [
   ["royal_knight", 2000, 2000, 200, 0, 0, 1.0, 6, 60,
    1.6, 5.5, 0, 45, -1, -1, false, 0, 0,
    "ground", "ground", 1, 30, 30, [],
    [], null, null, false, false, null,
    0, 0,
    60
+  ]
+]],
+["Skeleton King", "champion", 4, [
+  ["skeleton_king", 1900, 1900, 200, 0, 0, 1.4, 6, 60,
+   2.5, 5.5, 0, 36, -1, -1, false, 0, 0,
+   "ground", "ground", 1, 30, 30,
+   [["delayed_spell", 510, "Graveyard"]]
   ]
 ]],
 
@@ -138,13 +205,20 @@ var cards = [
    // no [25] onSpawnSpell — no spawn zap
   ]
 ]],
+["Lumberjack", "legendary", 4, [
+  ["lumberjack", 800, 800, 200, 0, 0, 0.8, 4, 105,
+   1.6, 5.5, 0, 21, -1, -1, false, 0, 0,
+   "ground", "ground", 1, 30, 30, [],
+   [], null, null, false, false, "Rage"
+  ]
+]],
 
 ["Flying Machine", "rare", 4, [
   ["flying_machine", 305, 305, 138, 0, 0, 0.8, 2, 60,
    6.0, 6.0, 0, 33, -1, -1, false, 0, 0,
    "air", "all", 1, 30, 30, []]
 ]],
-["P.E.K.K.A.", "epic", 7, [
+["P.E.K.K.A", "epic", 7, [
   ["pekka", 3068, 3068, 678, 0, 0, 1.4, 4, 45,
    1.2, 5.5, 0, 54, -1, -1, false, 0, 0,
    "ground", "ground", 1, 30, 30, []]
@@ -209,6 +283,59 @@ var cards = [
    "TwoBarbarians", // [26] deathSpawn
    false,         // [27] deathHandled (gets set true after death)
    true           // [28] dieAfterAttack ← NEW FLAG
+  ]
+]],
+["Inferno Tower", "rare", 5, [
+  ["inferno_tower", 1100, 1100, 30, 0, 0, 1.0, 100, 0,
+   6.0, 6.0, 0, 6, -1, -1, false, 0, 0,
+   "building", "all", 1, 0, 30, [],
+   [], null, null, false, false, null,
+   0, 0, 0, 0, -1
+  ]
+]],
+["OneSpearGoblin", "common", 0, [
+  ["spear_goblin", 130, 130, 80, 0, 0, 0.4, 1, 90,
+   5.5, 5.5, 0, 30, -1, -1, false, 0, 0,
+   "ground", "all", 1, 30, 30, []]
+]],
+["Barbarian", "common", 0, [
+  ["barbarian", 670, 670, 150, 0, 0, 0.6, 4, 60,
+   0.6, 5.5, 0, 36, -1, -1, false, 0, 0,
+   "ground", "ground", 1, 30, 30, []]
+]],
+["Goblin Hut", "rare", 5, [
+  ["goblin_hut", 1080, 1080, 0, 0, 0, 1.0, 100, 0,
+   0, 7.0, 0, 0, -1, -1, false, 0, 0,
+   "building", "none", 1, 0, 30, [["conditional_summon", 60, 60, "OneSpearGoblin"]]]
+]],
+//                                                          ↑↑↑↑ 60 frames = 2 sec
+["Barbarian Barrel", "common", 2, [
+  ["barbarian_barrel",
+   150,         // [1] damage
+   1.0,         // [2] radius
+   180,         // [3] speed (matches Log's 180)
+   0.35,        // [4] crown penalty
+   [],          // [5] effects
+   1,           // [6] preLand
+   "rolling",   // [7] type
+   4,           // [8] roll distance
+   1.5,         // [9] small knockback
+   0.5          // [10] big knockback
+  ]
+], "spell"],
+
+["Night Witch", "legendary", 4, [
+  ["night_witch", 949, 949, 158, 0, 0, 0.8, 4, 60,
+   1.6, 5.5, 0, 36, -1, -1, false, 0, 0,
+   "ground", "ground", 1, 30, 30, [["summon", 180, 180, "Bats"]],
+   [], "Bats"
+  ]
+]],
+["Archer Queen", "champion", 5, [
+  ["archer_queen", 1750, 1750, 175, 0, 0, 0.8, 4, 60,
+   5.0, 5.5, 0, 36, -1, -1, false, 0, 0,
+   "ground", "all", 1, 30, 30,
+   [["go_stealth", 480]]
   ]
 ]],
 ["RoyalDeliveryImpact", "common", 0, [
@@ -616,7 +743,7 @@ var cards = [
 ["Fireball", "rare", 4, [
   ["fireball",
     572,     // damage
-    2.5,     // radius
+    3.5,     // radius
     1280,    // speed — was 7.0
     0.35,    // penalty
     []
@@ -647,7 +774,38 @@ var cards = [
    ["Knight", "common", 3, [
     ["knight", 2400, 2400, 160, 0, 0, 1.0, 1, 60, 1.2, 5.5, 0, 40, -1, -1, false, 0, 0, "ground", "ground", 1, 30, 30, []]
   ]],
-
+  ["X-Bow", "epic", 6, [
+  ["xbow", 1000, 1000, 36, 0, 0, 1.0, 100, 0,
+   11.5, 11.5, 0, 9, -1, -1, false, 0, 0,
+   "building", "ground", 1, 0, 150, []]
+]],
+["GoblinBrawler", "common", 0, [
+  ["goblin_brawler", 750, 750, 250, 0, 0, 0.8, 4, 90,
+   0.6, 5.5, 0, 36, -1, -1, false, 0, 0,
+   "ground", "ground", 1, 30, 30, []]
+]],
+["Goblin Cage", "rare", 4, [
+  ["goblin_cage", 1000, 1000, 0, 0, 0, 1.0, 100, 0,
+   0, 0, 0, 0, -1, -1, false, 0, 0,
+   "building", "none", 1, 0, 30, [],
+   [], null, "GoblinBrawler", false, false, null
+  ]
+]],
+["Bomb Tower", "rare", 4, [
+  ["bomb_tower", 1100, 1100, 140, 0, 0, 1.0, 100, 0,
+   6.0, 6.0, 0, 48, -1, -1, false, 0, 1.5,
+   "building", "ground", 1, 0, 30, []]
+]],
+["Tombstone", "common", 3, [
+  ["tombstone", 478, 478, 0, 0, 0, 1.0, 100, 0,
+   0, 0, 0, 0, -1, -1, false, 0, 0,
+   "building", "none", 1, 0, 30, [["summon", 30, 30, "OneSkeleton"]]]
+]],
+["Mortar", "common", 4, [
+  ["mortar", 528, 528, 102, 0, 0, 1.0, 100, 0,
+   11.5, 11.5, 0, 150, -1, -1, false, 0, 1.0,
+   "building", "ground", 1, 0, 30, []]
+]],
   // ===== 2. ARCHERS — spawns 2 ranged units =====
   ["Archers", "common", 3, [
     ["archer", 250, 250, 90, -0.5, 0, 0.6, 1, 60,
@@ -674,7 +832,7 @@ var cards = [
 ]],
 
   // ===== MINI P.E.K.K.A. =====
-  ["Mini P.E.K.K.A.", "rare", 4, [
+  ["Mini P.E.K.K.A", "rare", 4, [
     ["minipekka", 1200, 1200, 550, 0, 0, 0.8, 1, 90,
      1.2, 5.5, 0, 54, -1, -1, false, 0, 0,   // ← sight 5.5
      "ground", "ground", 1, 30, 30, []]
@@ -707,6 +865,11 @@ var cards = [
      3.5, 4.0, 0, 48, -1, -1, false, 1.5, 0,
      "air", "all", 1, 30, 30, []]
   ]],
+  ["OneSkeleton", "common", 0, [
+  ["skeleton", 80, 80, 80, 0, 0, 0.4, 1, 75,
+   0.4, 5.5, 0, 33, -1, -1, false, 0, 0,
+   "ground", "ground", 1, 30, 30, []]
+]],
 
    // ===== SKELETONS =====
   ["Skeletons", "common", 1, [
@@ -940,7 +1103,7 @@ var cards = [
    [],             // no effects
    0,              // no delay
    "rolling",      // is rolling
-   3.18,           // roll distance (7/11 of 5)
+   5,           // roll distance (7/11 of 5)
    0.6,            // knockSmall
    0.2             // knockBig
   ]
@@ -969,14 +1132,14 @@ var cards = [
 ]],
 ["ExecutionerAxe", "epic", 0, [
   ["executioner_axe",
-   90,             // damage per pass
+   190,             // damage per pass
    0.4,            // radius (width)
    200,            // speed
    0.35,           // crown penalty
    [],             // no effects
    0,              // no delay
    "piercing",     // new spell type
-   3               // pierce range (forward distance)
+   6               // pierce range (forward distance)
   ]
 ], "spell"],
 ["MagicArrow", "epic", 0, [
@@ -1024,7 +1187,7 @@ var cards = [
    0,
    0.35,
    [],
-   5                   // ← was 1, now 30 frames = 1 sec delay
+   10                // ← was 1, now 30 frames = 1 sec delay
   ]
 ], "spell"],
 ["Mega Knight", "legendary", 7, [
@@ -1036,14 +1199,44 @@ var cards = [
    "MegaKnightSlam"
   ]
 ]],
+["Graveyard", "epic", 5, [
+  ["graveyard",
+   0,           // [1] damage (none direct)
+   4.0,         // [2] radius
+   0,           // [3] speed
+   1,           // [4] crown penalty
+   [],          // [5] effects
+   1,           // [6] preLand (instant)
+   "persistent" // [7] spell type
+  ]
+], "spell"],
+
+["Elixir Golem", "rare", 3, [
+  ["elixir_golem", 2000, 2000, 100, 0, 0, 1.4, 8, 45,
+   0.8, 5.5, 0, 36, -1, -1, false, 0, 0,
+   "ground", "buildings", 1, 30, 30, []]
+]],
+["Furnace", "rare", 4, [
+  ["furnace", 600, 600, 70, 0, 0, 0.8, 4, 60,
+   5.0, 5.5, 0, 30, -1, -1, false, 0, 0.5,
+   "ground", "all", 1, 30, 30, [["summon", 120, 120, "Fire Spirit"]]]
+]],
+["Cannon", "common", 3, [
+  ["cannon", 743, 743, 89, 0, 0, 1.0, 100, 0,
+   5.5, 5.5, 0, 24, -1, -1, false, 0, 0,
+   "building", "ground", 1, 0, 30, []]
+]],
+["Tesla", "common", 4, [
+  ["tesla", 890, 890, 100, 0, 0, 1.0, 100, 0,
+   5.5, 5.5, 0, 54, -1, -1, false, 0, 0,
+//                 ↑↑ was 30, now 54 (1.8 sec)
+   "building", "all", 1, 0, 30, [],
+   [["stun", 22]]
+  ]
+]],
 
   // ===== 15. CANNON — defensive building =====
-  ["Cannon", "common", 3, [
-    ["cannon", 740, 740, 125, 0, 0, 1.0, 100, 0,
-     5.5, 5.5, 0, 24, -1, -1, false, 0, 0,
-     "building", "ground", 1, 30, 30,
-     [["lifetime", 900]]]  // disappears after 30 seconds (900 frames)
-  ]]
+
 
 ];
 
