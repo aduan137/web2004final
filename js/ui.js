@@ -1,7 +1,7 @@
 
 
 const DECKS_CACHE_KEY = 'pro_decks_cache_v1';
-const DECKS_CACHE_HOURS = 1;
+const DECKS_CACHE_HOURS = 3;
 
 window.proDecks = [];   
 
@@ -118,6 +118,7 @@ window.addEventListener('load', async () => {
 
     document.getElementById('loadingMessage').style.display = 'none';
     document.getElementById('loadingContinueBtn').style.display = '';
+    document.getElementById('loadingCredit').style.display = '';  
   } catch (err) {
     console.error('Load failed:', err);
     const msg = document.getElementById('loadingMessage');

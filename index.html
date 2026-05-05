@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 
-  
+  <!-- The engine/game logic is borrowed from  Scholarly Gaming and p5.js libary. Card specific behavior or features were implmente by me-->
   <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
 </head>
 
@@ -23,8 +23,12 @@
   <p>Note: not all cards are implemented. I left out the cards that suck or nobody plays (even though some good players might)</p>
   <div id="loadingMessage">Loading</div>
   <button id="loadingContinueBtn" style="display: none;">Continue</button>
+   <p id="loadingCredit" style="display: none;">
+    Credit to the core game logic goes to <strong>Scholarly Gaming</strong>
+  </p>
 </div>
      <button id="placeholderBattleBtn">Battle</button>
+    
      <div id="loadingOverlay"></div>
 
   <div class="deckbook-app" id="deckSelectScreen">
