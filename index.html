@@ -7,61 +7,53 @@
 
   <link rel="stylesheet" href="styles.css" />
 
-
-  <!-- Poppins font for the deckbook -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
-  <!-- p5.js: lets us use Processing-style functions (draw, fill, rect, ellipse, etc.)
-       in a plain browser. The original engine was written in Processing.js, and p5.js
-       is the modern equivalent, so almost all of the original code will port over. -->
+
+  
   <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
 </head>
 
 <body>
+
   <div id="loadingScreen">
   <h1>Clash Defense Trainer</h1>
+  <p>Note: not all cards are implemented. I left out the cards that suck or nobody plays (even though some good players might)</p>
   <div id="loadingMessage">Loading</div>
   <button id="loadingContinueBtn" style="display: none;">Continue</button>
 </div>
      <button id="placeholderBattleBtn">Battle</button>
      <div id="loadingOverlay"></div>
 
-  <!-- === DECK SELECT SCREEN (the deckbook) ===
-       Replaces the old simple list. Styles live in deckbook.css,
-       logic lives in js/book.js — both scoped so they don't bleed
-       into the rest of the page or the game globals. -->
   <div class="deckbook-app" id="deckSelectScreen">
-
+<audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
     <input type="checkbox" id="checkbox-cover">
     <input type="checkbox" id="checkbox-page1">
     <input type="checkbox" id="checkbox-page2">
 
     <div class="stage" id="stage">
       <div class="book">
-        <!-- COVER: front face (decorative) + back face (Deck I left half) -->
         <div class="cover">
           <label class="cover-face cover-front" for="checkbox-cover">
             <div class="cover-content">
-              <h1>DECK<br>TOMVS</h1>
-              <div class="ornament">✦ ✦ ✦</div>
-              <p>open</p>
+              <h1>DECKS<br></h1>
+ <div class="ornament">✦ ✦ ✦</div>
             </div>
           </label>
           <div class="cover-face cover-back">
             <span class="deck-label left">Deck I</span>
             <div class="deck-half" data-deck="0" data-side="left">
-              <div class="card-slot" data-slot="0"></div>
-              <div class="card-slot" data-slot="1"></div>
-              <div class="card-slot" data-slot="2"></div>
-              <div class="card-slot" data-slot="3"></div>
+ <div class="card-slot" data-slot="0"></div>
+ <div class="card-slot" data-slot="1"></div>
+ <div class="card-slot" data-slot="2"></div>
+ <div class="card-slot" data-slot="3"></div>
             </div>
             <label class="prev" for="checkbox-cover">‹</label>
           </div>
         </div>
 
-        <!-- PAGE 1: front = Deck I right, back = Deck II left -->
         <div class="page" id="page1">
           <div class="front-page">
             <span class="deck-label right">Deck I</span>
@@ -85,7 +77,6 @@
           </div>
         </div>
 
-        <!-- PAGE 2: front = Deck II right, back = Deck III left -->
         <div class="page" id="page2">
           <div class="front-page">
             <span class="deck-label right">Deck II</span>
@@ -109,7 +100,6 @@
           </div>
         </div>
 
-        <!-- PAGE 3: front = Deck III right, back = end of book -->
         <div class="page" id="page3">
           <div class="front-page">
             <span class="deck-label right">Deck III</span>
@@ -129,12 +119,11 @@
 
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-title">
-          <h3>The Grimoire</h3>
-          <button class="close-btn" id="closeSidebar" aria-label="Close">×</button>
-        </div>
-        <input type="text" class="search-input" id="searchInput" placeholder="Search cards…">
-      
+ <div class="sidebar-title">
+    <h3>Cards</h3>
+   <button class="close-btn" id="closeSidebar" aria-label="Close">×</button>
+     </div>
+     <input type="text" class="search-input" id="searchInput" placeholder="Search cards…">
       </div>
       <div class="suggested-decks-section" id="suggestedDecksSection">
   <button class="suggested-toggle" id="suggestedToggle">
@@ -149,7 +138,7 @@
   </div>
 
   <div id="opponentSelectScreen" style="display: none;">
-  <h2 class="opponent-title">Choose Your Opponent</h2>
+  <h2 class="opponent-title">Choose which deck to defend against</h2>
   <div class="opponent-grid">
     <button class="opponent-card" data-ai-deck="0" data-card="Balloon">
       <img id="opponentImg0" alt="Balloon">
@@ -166,12 +155,8 @@
   </div>
 </div>
 
-  <!-- === BATTLE SCREEN ===
-       Hidden until deck select is done. p5.js will inject the <canvas>
-       into #gameContainer when we call createCanvas(600, 600) in setup(). -->
  <div id="battleScreen" style="display: none;">
   <div class="battle-layout">
-    
     <div id="gameContainer" class="scaled-canvas"></div>
     <div class="side-panel">
       <div class="card-grid">
@@ -182,34 +167,23 @@
       </div>
     </div>
   </div>
- 
 </div>
 <div id="gameOverScreen" style="display: none;">
-  
     <h1 id="gameOverResult">DEFEAT</h1>
     <button id="gameOverReturnBtn">Return to Deckbook</button>
-  
 </div>
 
-
-  <!-- === SCRIPTS ===
-       Load order matters! Each file declares global `var`s that later files depend on.
-       Rule of thumb: data → state → logic → rendering → input → main.
-       p5.js automatically calls setup() and draw() once main.js defines them. -->
-  
-  
   <script src="js/cards.js"></script>
-       <script src="book.js"></script>        <!-- deckbook UI (deck select screen) -->
-  
-  <script src="js/spells.js"></script>      <!-- card definitions + cardsInit() -->
-  <script src="js/state.js"></script>       <!-- bTroops, rTroops, elixir, etc. -->
-  <script src="js/troops.js"></script>      <!-- troop update: targeting, movement, attack -->
-  <script src="js/projectiles.js"></script> <!-- projectile update + collision -->
-  <script src="js/render.js"></script>      <!-- drawArena, drawTroops, drawUI -->
-  <script src="js/input.js"></script>       <!-- mousePressed, placement validation -->
-  <script src="js/waves.js"></script>       <!-- enemy wave generator (replaces red player) -->
-  <script src="js/ui.js"></script>          <!-- deck select screen (HTML side) -->
-  <script src="js/main.js"></script>        <!-- setup() and draw() — orchestrates everything -->
+  <script src="book.js"></script>
+  <script src="js/spells.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/troops.js"></script>
+  <script src="js/projectiles.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/waves.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
 
 </body>
 </html>

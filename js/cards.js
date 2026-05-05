@@ -1,41 +1,3 @@
-// ============================================================
-// cards.js — card definitions (data only, no logic)
-// ------------------------------------------------------------
-// Each card follows the original engine's format:
-//   [name, rarity, elixirCost, [troop templates], optional extra]
-//
-// Each troop template is a 24-element positional array:
-//   [0]  name          — string, used as sprite/render key
-//   [1]  hp            — current health
-//   [2]  maxHp         — starts equal to hp
-//   [3]  dmg           — damage per hit
-//   [4]  x             — spawn OFFSET in tiles (added to click pos)
-//   [5]  y             — spawn OFFSET in tiles
-//   [6]  size          — hitbox diameter in tiles
-//   [7]  mass          — for push/collision (1 = normal)
-//   [8]  speed         — 45=slow, 60=medium, 90=fast, 120=very fast
-//                       (0 for buildings/towers)
-//   [9]  range         — attack range in tiles
-//   [10] sightRange    — how far it can see (usually = range or slightly more)
-//   [11] cool          — current attack cooldown (start at 0)
-//   [12] maxCool       — frames between attacks (at 30 FPS, 30 = 1 sec)
-//   [13] ret           — retarget behavior flag (-1 = default)
-//   [14] target        — index of current target (-1 = none)
-//   [15] lock          — target locked?
-//   [16] facingAngle   — 0 = up, 180 = down (set at placement)
-//   [17] aoe           — splash radius in tiles (0 = single target)
-//   [18] type          — "ground" | "air" | "building" | "spell"
-//   [19] targetType    — "all" | "ground" | "air" | "buildings" | "troops" | "none"
-//   [20] penalty       — damage multiplier vs crown towers (1 = normal, <1 = reduced)
-//   [21] loadTime      — frames before first attack
-//   [22] deployTime    — frames of spawn delay (troop can't act yet)
-//   [23] effects[]     — status effects (stun, slow, etc.) — starts empty
-//
-// Stats below are rough approximations of mid-level Clash values.
-// Tune to taste later — this is a prototype pool.
-// ============================================================
-
-
 var cards = [
   ["OneGoblin", "common", 0, [
   ["goblin", 140, 140, 100, 0, 0, 0.4, 1, 90,
@@ -44,12 +6,12 @@ var cards = [
 ]],
 ["Goblin Barrel", "epic", 3, [
   ["goblin_barrel",
-   0,           // [1] no damage
-   1.4,         // [2] radius (used for triangle size)
-   600,         // [3] speed (flies like a fireball)
-   1,           // [4] crown penalty (n/a)
-   [],          // [5] effects
-   0            // [6] preLand
+   0,          
+   1.4,       
+   600,        
+   1,      
+   [],         
+   0           
   ]
 ], "spell"],
   ["Vines", "epic", 3, [
@@ -61,12 +23,12 @@ var cards = [
 ], "spell"],
   ["Lightning", "epic", 6, [
   ["lightning",
-   1000,         // [1] damage per zap
-   4,         // [2] radius (search area)
-   0,           // [3] speed (instant)
-   0.35,        // [4] crown penalty
-   [["stun", 15]],  // [5] effects: 0.5 sec stun on hit
-   1            // [6] preLand
+   1000,      
+   4,        
+   0,           
+   0.35,        
+   [["stun", 15]],  
+   1           
   ]
 ], "spell"],
   ["Fisherman", "legendary", 3, [
@@ -76,12 +38,12 @@ var cards = [
 ]],
 ["Rocket", "rare", 6, [
   ["rocket",
-   1300,         // [1] damage
-   2.0,         // [2] radius
-   200,         // [3] speed (slow — Fireball is probably ~600-800)
-   0.35,        // [4] crown penalty
-   [],          // [5] effects (none)
-   0            // [6] preLand
+   1300,
+   2.0,
+   200,
+   0.35,
+   [],
+   0
   ]
 ], "spell"],
 ["Rage", "epic", 3, [
@@ -114,7 +76,7 @@ var cards = [
    "ground", "buildings", 1, 30, 30, [],
    [], null, "ThreeGoblins", false, true, null,
    0, 0, 0, 0, -1,
-   1                  // [35] stealth flag — always hidden
+   1
   ]
 ]],
 ["Royal Ghost", "legendary", 3, [
@@ -123,25 +85,25 @@ var cards = [
    "ground", "ground", 1, 30, 30, [],
    [], null, null, false, false, null,
    0, 0, 0, 0, -1,
-   1                  // [35] stealth flag — starts hidden
+   1
   ]
 ]],
   ["Ice Wizard", "legendary", 3, [
   ["icewizard",
-   598, 598,        // hp
-   80,              // damage (low — utility card)
-   0, 0,            // offsets
-   0.6,             // size
-   1,               // mass
-   60,              // speed
-   5.5,             // attack range
-   6.0,             // sight range
-   0, 51,           // maxCooldown 1.7 sec
+   598, 598,
+   80,
+   0, 0,
+   0.6,
+   1,
+   60,
+   5.5,
+   6.0,
+   0, 51,
    -1, -1, false,
-   0, 1.0,          // small AoE on his projectile
+   0, 1.0,
    "ground", "all",
    1, 30, 30, [],
-   [["slow", 75]]   // ← onHitEffects: slow target for 2.5 sec
+   [["slow", 75]]
   ]
 ]],
 ["Golden Knight", "rare", 4, [
@@ -188,21 +150,20 @@ var cards = [
 
   ["Electro Dragon", "epic", 5, [
   ["edragon",
-   1116, 1116,      // hp, maxHp (chunkier than ewiz)
-   159,             // damage
-   0, 0,            // row offset, col offset
-   1.5,             // size (bigger — it's a dragon)
-   2,               // mass
-   60,              // speed (medium)
-   3.5,             // attack range (shorter than ewiz, like Baby Dragon)
-   5.5,             // sight range
-   0, 72,           // cooldown, maxCooldown (slower attacks — 2.4 sec)
-   -1, -1, false,   // ret, target, lock
-   0, 0,            // facingAngle, aoe
-   "air", "all",    // ← KEY: type is "air"
-   1, 30, 30, [],   // crownPenalty, loadTime, deployTime, effects
-   [["stun", 15]]   // onHitEffects (stun on hit, same as ewiz)
-   // no [25] onSpawnSpell — no spawn zap
+   1116, 1116,
+   159,
+   0, 0,
+   1.5,
+   2,
+   60,
+   3.5,
+   5.5,
+   0, 72,
+   -1, -1, false,
+   0, 0,
+   "air", "all",
+   1, 30, 30, [],
+   [["stun", 15]]
   ]
 ]],
 ["Lumberjack", "legendary", 4, [
@@ -235,16 +196,15 @@ var cards = [
 ]],
 
   ["Electro Wizard", "legendary", 4, [
-  // Electro Wizard troop template, expanded:
 ["ewiz",
  598, 598, 159, 0, 0, 0.6, 1, 60,
  5.0, 5.5, 0, 54, -1, -1, false,
  0, 0,
  "ground", "all",
  1, 30, 30, [],
- [["stun", 15]],   // [24] onHitEffects
- "Zap"             // [25] onSpawnSpell — cast this spell at spawn position
-]]],
+ [["stun", 15]],
+ "Zap"
+]],],
 ["Three Musketeers", "rare", 9, [
   ["musketeer3", 720, 720, 200,  0.0, -0.7, 0.8, 1, 60,
    6.0, 6.5, 0, 33, -1, -1, false, 0, 0,
@@ -278,11 +238,11 @@ var cards = [
   ["battle_ram", 756, 756, 220, 0, 0, 1.5, 6, 90,
    0.5, 5.5, 0, 30, -1, -1, false, 0, 0,
    "ground", "buildings", 1, 30, 30, [],
-   [],            // [24] onHitEffects
-   null,          // [25] onSpawnSpell
-   "TwoBarbarians", // [26] deathSpawn
-   false,         // [27] deathHandled (gets set true after death)
-   true           // [28] dieAfterAttack ← NEW FLAG
+   [],
+   null,
+   "TwoBarbarians",
+   false,
+   true
   ]
 ]],
 ["Inferno Tower", "rare", 5, [
@@ -308,19 +268,18 @@ var cards = [
    0, 7.0, 0, 0, -1, -1, false, 0, 0,
    "building", "none", 1, 0, 30, [["conditional_summon", 60, 60, "OneSpearGoblin"]]]
 ]],
-//                                                          ↑↑↑↑ 60 frames = 2 sec
 ["Barbarian Barrel", "common", 2, [
   ["barbarian_barrel",
-   150,         // [1] damage
-   1.0,         // [2] radius
-   180,         // [3] speed (matches Log's 180)
-   0.35,        // [4] crown penalty
-   [],          // [5] effects
-   1,           // [6] preLand
-   "rolling",   // [7] type
-   4,           // [8] roll distance
-   1.5,         // [9] small knockback
-   0.5          // [10] big knockback
+   150,
+   1.0,
+   180,
+   0.35,
+   [],
+   1,
+   "rolling",
+   4,
+   1.5,
+   0.5
   ]
 ], "spell"],
 
@@ -340,12 +299,12 @@ var cards = [
 ]],
 ["RoyalDeliveryImpact", "common", 0, [
   ["royal_delivery_impact",
-   159,     // damage
-   2.5,     // radius
-   0,       // speed 0 = fixed delay
-   0.35,    // crown penalty
-   [],      // no effects
-   90       // fixedDelay 90 frames = 3 sec wait, matches recruit's deploy
+   159,
+   2.5,
+   0,
+   0.35,
+   [],
+   90
   ]
 ], "spell"],
 ["Royal Delivery", "rare", 3, [
@@ -354,8 +313,8 @@ var cards = [
    "ground", "ground", 1, 30, 90, [],
    [],
    "RoyalDeliveryImpact",
-   null, false, false, null,    // [26-29]
-   202, 202                      // [30] shieldMaxHp, [31] shieldHp
+   null, false, false, null,
+   202, 202
   ]
 ]],
 
@@ -379,9 +338,9 @@ var cards = [
   ["ice_golem", 819, 819, 49, 0, 0, 1.0, 4, 45,
    1.2, 5.5, 0, 75, -1, -1, false, 0, 0,
    "ground", "buildings", 1, 30, 30, [],
-   [],            // [24] onHitEffects
-   null,          // [25] onSpawnSpell
-   "IceBomb"      // [26] deathSpawn ← spawns IceBomb on death
+   [],
+   null,
+   "IceBomb"
   ]
 ]],
 ["Wall Breakers", "epic", 2, [
@@ -401,7 +360,7 @@ var cards = [
    0.5, 5.5, 0, 30, -1, -1, false, 0, 0,
    "ground", "ground", 1, 30, 30, [],
    [], null, null, false, false, null,
-   130, 130   // [30] shieldMaxHp, [31] shieldHp
+   130, 130
   ],
   ["guard", 80, 80, 80, -0.5,  0.4, 0.5, 1, 90,
    0.5, 5.5, 0, 30, -1, -1, false, 0, 0,
@@ -460,9 +419,9 @@ var cards = [
   ["balloon", 1050, 1050, 600, 0, 0, 1.0, 4, 60,
    1.5, 4.5, 0, 90, -1, -1, false, 0, 0,
    "air", "buildings", 1, 30, 30, [],
-   [],         // [24] onHitEffects
-   null,       // [25] onSpawnSpell
-   "Bomb"      // [26] deathSpawn — spawns existing Bomb on death
+   [],
+   null,
+   "Bomb"
   ]
 ]],
 ["Royal Hogs", "rare", 5, [
@@ -489,40 +448,37 @@ var cards = [
    1.6, 5.5, 0, 42, -1, -1, false, 0, 0,
    "ground", "ground", 1, 30, 30, [],
    [], null, null, false, false, null,
-   0, 0,        // [30] [31] no shield
-   60           // [32] chargeReady — starts at 60 = ready to charge from spawn
+   0, 0,
+   60
   ]
 ]],
 ["Golem", "epic", 8, [
   ["golem", 4263, 4263, 222, 0, 0, 1.6, 8, 45,
    1.2, 5.5, 0, 75, -1, -1, false, 0, 0,
    "ground", "buildings", 1, 30, 240, [],
-   [], null, "GolemDeath",   // [26] deathSpawn
+   [], null, "GolemDeath",
    false, false, null
   ]
 ]],
 ["GolemExplosion", "epic", 0, [
   ["golem_explosion",
-   332,     // damage — moderate area damage (Golem death damage in Clash)
-   2.5,     // radius
-   0,       // speed = 0
-   0.35,    // crown penalty
-   [],      // no effects
-   1        // fixedDelay
+   332,
+   2.5,
+   0,
+   0.35,
+   [],
+   1
   ]
 ], "spell"],
 ["GolemDeath", "common", 0, [
-  // Death-explosion bomb
   ["golem_bomb", 1, 1, 0, 0, 0, 0.5, 0, 0,
    0, 0, 0, 0, -1, -1, false, 0, 0,
    "bomb", "none", 1, 0, 1, [["kamikaze", 1, 1, "GolemExplosion"]]
   ],
-  // First Golemite (no death explosion)
   ["golemite", 766, 766, 159, 0, -0.5, 1.0, 4, 45,
    1.2, 5.5, 0, 50, -1, -1, false, 0, 0,
    "ground", "buildings", 1, 30, 30, []
   ],
-  // Second Golemite
   ["golemite", 766, 766, 159, 0, 0.5, 1.0, 4, 45,
    1.2, 5.5, 0, 50, -1, -1, false, 0, 0,
    "ground", "buildings", 1, 30, 30, []
@@ -563,8 +519,8 @@ var cards = [
    1.5, 5.5, 0, 42, -1, -1, false, 0, 0,
    "ground", "ground", 1, 30, 30, [],
    [], null, null, false, false, null,
-   161, 161,    // [30] [31] shield 161
-   60           // [32] chargeReady (starts charged)
+   161, 161,
+   60
   ]
 ]],
 ["Royal Recruits", "common", 7, [
@@ -728,49 +684,46 @@ var cards = [
    5.0, 5.5, 0, 51, -1, -1, false, 0, 0,
    "ground", "all", 1, 30, 30, []]
 ]],
-  // ===== ZAP — instant lightning strike =====
 ["Zap", "common", 2, [
   ["zap",
-    159,             // damage
-    2.5,             // AoE radius
-    0,               // speed = 0 → fixed-delay spell, not a projectile
-    0.3,             // crown tower damage penalty (game-file value)
-    [["stun", 15]],  // 15-frame stun (0.5s at 30fps)
-    5                // fixed delay in frames (only used when speed === 0)
+    159,
+    2.5,
+    0,
+    0.3,
+    [["stun", 15]],
+    5
   ]
 ], "spell"],
-  // ===== FIREBALL — classic AoE spell =====
 ["Fireball", "rare", 4, [
   ["fireball",
-    572,     // damage
-    3.5,     // radius
-    1280,    // speed — was 7.0
-    0.35,    // penalty
+    572,
+    3.5,
+    1280,
+    0.35,
     []
   ]
 ], "spell"],  
 ["BombExplosion", "epic", 0, [
   ["bomb_explosion",
-   1144,    // damage
-   3.0,     // AoE radius
-   0,       // speed = 0 means "appears at target instantly"
-   0.35,    // crown penalty
-   [],      // no effects
-   1        // fixedDelay = 1 frame (essentially instant)
+   1144,
+   3.0,
+   0,
+   0.35,
+   [],
+   1
   ]
 ], "spell"],
 
 ["Arrows", "common", 3, [
   ["arrows",
-    142,     // damage (relatively low — kills swarms, not tanks)
-    4.0,     // AoE radius (much bigger than Fireball — arrow spread)
-    1800,    // speed (fastest spell — they're arrows, not a heavy ball)
-    0.35,    // tower damage penalty
-    []       // no extra effects
+    142,
+    4.0,
+    1800,
+    0.35,
+    []
   ]
-], "spell"],// ← new 5th element on the outer card array, marks this as a spell
+], "spell"],
 
-  // ===== 1. KNIGHT — cheap melee tank =====
    ["Knight", "common", 3, [
     ["knight", 2400, 2400, 160, 0, 0, 1.0, 1, 60, 1.2, 5.5, 0, 40, -1, -1, false, 0, 0, "ground", "ground", 1, 30, 30, []]
   ]],
@@ -806,7 +759,6 @@ var cards = [
    11.5, 11.5, 0, 150, -1, -1, false, 0, 1.0,
    "building", "ground", 1, 0, 30, []]
 ]],
-  // ===== 2. ARCHERS — spawns 2 ranged units =====
   ["Archers", "common", 3, [
     ["archer", 250, 250, 90, -0.5, 0, 0.6, 1, 60,
      5.0, 5.5, 0, 36, -1, -1, false, 0, 0,
@@ -816,7 +768,6 @@ var cards = [
      "ground", "all", 1, 30, 30, []]
   ]],
 
-  // ===== 3. GIANT — big slow tank, targets buildings only =====
   ["Giant", "rare", 5, [
     ["giant", 3500, 3500, 230, 0, 0, 1.5, 3, 45, 1.2, 1.2, 0, 45, -1, -1, false, 0, 0, "ground", "buildings", 1, 30, 30, []]
   ]],
@@ -825,28 +776,24 @@ var cards = [
    2127, 2127, 159, 0, 0, 1.5, 4, 45,
    1.2, 5.5, 0, 45, -1, -1, false, 0, 0,
    "ground", "ground", 1, 30, 30, [],
-   [],          // [24] onHitEffects — none
-   null,        // [25] onSpawnSpell — none
-   "Bomb"       // [26] deathSpawn — spawns Bomb card on death
+   [],
+   null,
+   "Bomb"
   ]
 ]],
 
-  // ===== MINI P.E.K.K.A. =====
   ["Mini P.E.K.K.A", "rare", 4, [
     ["minipekka", 1200, 1200, 550, 0, 0, 0.8, 1, 90,
-     1.2, 5.5, 0, 54, -1, -1, false, 0, 0,   // ← sight 5.5
+     1.2, 5.5, 0, 54, -1, -1, false, 0, 0,
      "ground", "ground", 1, 30, 30, []]
   ]],
 
-
-  // ===== 5. MUSKETEER — ranged single-target =====
   ["Musketeer", "rare", 4, [
     ["musketeer", 720, 720, 200, 0, 0, 0.8, 1, 60,
      6.0, 6.5, 0, 33, -1, -1, false, 0, 0,
      "ground", "all", 1, 30, 30, []]
   ]],
 
-  // ===== 6. MINIONS — 3 flying units =====
   ["Minions", "common", 3, [
     ["minion", 190, 190, 85,  0.0, -0.5, 0.6, 1, 90,
      1.7, 2.0, 0, 30, -1, -1, false, 0, 0,
@@ -859,7 +806,6 @@ var cards = [
      "air", "all", 1, 30, 30, []]
   ]],
 
-  // ===== 7. BABY DRAGON — flying splash =====
   ["Baby Dragon", "epic", 4, [
     ["babydragon", 1050, 1050, 160, 0, 0, 1.1, 2, 60,
      3.5, 4.0, 0, 48, -1, -1, false, 1.5, 0,
@@ -871,10 +817,9 @@ var cards = [
    "ground", "ground", 1, 30, 30, []]
 ]],
 
-   // ===== SKELETONS =====
   ["Skeletons", "common", 1, [
     ["skeleton", 80, 80, 80,  0.0, -0.4, 0.5, 1, 90,
-     0.5, 5.5, 0, 30, -1, -1, false, 0, 0,   // ← sight 5.5
+     0.5, 5.5, 0, 30, -1, -1, false, 0, 0,
      "ground", "ground", 1, 30, 30, []],
     ["skeleton", 80, 80, 80, -0.5, 0.3, 0.5, 1, 90,
      0.5, 5.5, 0, 30, -1, -1, false, 0, 0,
@@ -884,10 +829,9 @@ var cards = [
      "ground", "ground", 1, 30, 30, []]
   ]],
 
-  // ===== GOBLINS =====
   ["Goblins", "common", 2, [
     ["goblin", 140, 140, 120,  0.0, -0.4, 0.5, 1, 120,
-     0.5, 5.5, 0, 33, -1, -1, false, 0, 0,   // ← sight 5.5
+     0.5, 5.5, 0, 33, -1, -1, false, 0, 0,
      "ground", "ground", 1, 30, 30, []],
     ["goblin", 140, 140, 120, -0.5, 0.3, 0.5, 1, 120,
      0.5, 5.5, 0, 33, -1, -1, false, 0, 0,
@@ -897,7 +841,6 @@ var cards = [
      "ground", "ground", 1, 30, 30, []]
   ]],
 
-  // ===== 10. SPEAR GOBLINS — 3 cheap ranged =====
   ["Spear Goblins", "common", 2, [
     ["speargoblin", 100, 100, 55,  0.0, -0.4, 0.5, 1, 120,
      5.0, 5.5, 0, 51, -1, -1, false, 0, 0,
@@ -910,31 +853,27 @@ var cards = [
      "ground", "all", 1, 30, 30, []]
   ]],
 
-  // ===== VALKYRIE =====
  ["Valkyrie", "rare", 4, [
     ["valkyrie", 1800, 1800, 195, 0, 0, 1.2, 2, 60,
      0.2, 5.5, 0, 45, -1, -1, false, 1.2, 1.8,
      "ground", "ground", 1, 30, 30, []]
   ]],
 
-  // ===== 12. BOMBER — ranged AoE (ground only) =====
   ["Bomber", "common", 3, [
     ["bomber", 280, 280, 150, 0, 0, 0.7, 1, 60,
      4.5, 5.5, 0, 54, -1, -1, false, 1.5, 0,
      "ground", "ground", 1, 30, 30, []]
   ]],
 
-  // ===== 13. WIZARD — ranged AoE, hits air & ground =====
   ["Wizard", "rare", 5, [
     ["wizard", 880, 880, 190, 0, 0, 0.9, 1, 60,
-     5.5, 6.0, 0, 42, -1, -1, false, 1.5, 40,
+     3.5, 6.0, 0, 42, -1, -1, false, 1.5, 40,
      "ground", "all", 1, 30, 30, []]
   ]],
 
-  // ===== BARBARIANS =====
   ["Barbarians", "common", 5, [
     ["barbarian", 680, 680, 150, -0.8, -0.5, 0.8, 1, 60,
-     1.2, 5.5, 0, 45, -1, -1, false, 0, 0,   // ← sight 5.5
+     1.2, 5.5, 0, 45, -1, -1, false, 0, 0,
      "ground", "ground", 1, 30, 30, []],
     ["barbarian", 680, 680, 150,  0.8, -0.5, 0.8, 1, 60,
      1.2, 5.5, 0, 45, -1, -1, false, 0, 0,
@@ -959,13 +898,12 @@ var cards = [
    0,
    0.35,
    [["stun", 30]],
-   12              // ← was 1, now 12 frames = 0.4 sec at 30fps
+   12
   ]
 ], "spell"],
 ["Ice Spirit", "common", 1, [
   ["ice_spirit", 133, 133, 90, 0, 0, 0.5, 1, 90,
    1.8, 4.0, 0, 1, -1, -1, false, 0, 0,
-//  
    "ground", "all", 1, 30, 30, []]
 ]],
 
@@ -1000,26 +938,23 @@ var cards = [
 ["Berserker", "rare", 3, [
   ["berserker", 350, 350, 50, 0, 0, 0.6, 1, 90,
    0.6, 5.0, 0, 6, -1, -1, false, 0, 0,
-//          ↑ 0 = no windup, swings instantly when in range
    "ground", "ground", 1, 30, 30, []]
 ]],
 ["BarrelExplosion", "epic", 0, [
   ["barrel_explosion",
-   126,                  // 90% of goblin HP
-   1.5,                  // radius
-   0,                    // speed = 0
-   0.35,                 // crown penalty
-   [],                   // no effects
-   1                     // fixedDelay 1 frame
+   126,
+   1.5,
+   0,
+   0.35,
+   [],
+   1
   ]
 ], "spell"],
 ["BarrelDeath", "common", 0, [
-  // The exploding bomb
   ["barrel_bomb", 1, 1, 0, 0, 0, 0.5, 0, 0,
    0, 0, 0, 0, -1, -1, false, 0, 0,
    "bomb", "none", 1, 0, 1, [["kamikaze", 1, 1, "BarrelExplosion"]]
   ],
-  // 7 skeletons around the death point
   ["skeleton", 80, 80, 80,  0.0, -0.7, 0.5, 1, 90,
    0.5, 5.5, 0, 30, -1, -1, false, 0, 0,
    "ground", "ground", 1, 30, 30, []],
@@ -1065,7 +1000,6 @@ var cards = [
 ["Lava Hound", "legendary", 7, [
   ["lava_hound", 3000, 3000, 36, 0, 0, 1.6, 8, 30,
    1.9, 5.5, 0, 90, -1, -1, false, 0, 0,
-//   ↑ 1.75 = half of 3.5
    "air", "buildings", 1, 30, 30, [],
    [], null, "SixLavaPups"
   ]
@@ -1073,12 +1007,12 @@ var cards = [
 
 ["ElectroGiantPulse", "common", 0, [
   ["electro_giant_pulse",
-   126,                  // damage
-   1.5,                  // radius (1 tile around the giant + edge slack)
-   0,                    // speed = 0 → fixed delay
-   0.35,                 // crown penalty
-   [["stun", 9]],        // 0.3 sec stun
-   1                     // fixedDelay 1 frame (instant)
+   126,
+   1.5,
+   0,
+   0.35,
+   [["stun", 9]],
+   1
   ]
 ], "spell"],
 ["ElectroPulseBomb", "common", 0, [
@@ -1096,16 +1030,16 @@ var cards = [
 ]],
 ["BowlerRock", "epic", 0, [
   ["bowler_rock",
-   288,            // damage
-   0.5,            // radius (half of Log)
-   180,            // speed
-   0.35,           // crown penalty
-   [],             // no effects
-   0,              // no delay
-   "rolling",      // is rolling
-   5,           // roll distance (7/11 of 5)
-   0.6,            // knockSmall
-   0.2             // knockBig
+   288,
+   0.5,
+   180,
+   0.35,
+   [],
+   0,
+   "rolling",
+   5,
+   0.6,
+   0.2
   ]
 ], "spell"],
 ["Bowler", "epic", 5, [
@@ -1120,9 +1054,9 @@ var cards = [
    180,
    0.4,
    [],
-   15,                  // delay
+   15,
    "rolling",
-   10                   // ← roll distance (was implicit 5, now explicit 10)
+   10
   ]
 ], "spell"],
 ["Executioner", "legendary", 5, [
@@ -1132,27 +1066,27 @@ var cards = [
 ]],
 ["ExecutionerAxe", "epic", 0, [
   ["executioner_axe",
-   190,             // damage per pass
-   0.4,            // radius (width)
-   200,            // speed
-   0.35,           // crown penalty
-   [],             // no effects
-   0,              // no delay
-   "piercing",     // new spell type
-   6               // pierce range (forward distance)
+   190,
+   0.4,
+   200,
+   0.35,
+   [],
+   0,
+   "piercing",
+   6
   ]
 ], "spell"],
 ["MagicArrow", "epic", 0, [
   ["magic_arrow",
-   90,            // damage per pierce
-   0.5,           // narrow width
-   600,           // fast speed
-   0.35,          // crown penalty
-   [],            // no effects
-   0,             // no delay
-   "rolling",     // pierces through enemies
-   16,            // very long roll distance (~half the arena)
-   0, 0           // ← knockback set to 0 — no push
+   90,
+   0.5,
+   600,
+   0.35,
+   [],
+   0,
+   "rolling",
+   16,
+   0, 0
   ]
 ], "spell"],
 ["Magic Archer", "legendary", 4, [
@@ -1165,14 +1099,13 @@ var cards = [
    1.0, 5.5, 0, 60, -1, -1, false, 0, 0,
    "ground", "buildings", 1, 30, 30, [],
    [], null, null, false, false, null,
-   0, 0, 0,             // [30][31][32] no shield/charge
-   0                    // [33] secondaryCooldown for snare attack
+   0, 0, 0,
+   0
   ]
 ]],
 ["Sparky", "legendary", 6, [
   ["sparky", 1100, 1100, 1014, 0, 0, 1.0, 6, 45,
    6.5, 7.0, 0, 240, -1, -1, false, 0, 4.0,
-//                ↑ was 150, now 240 (8 sec)
    "ground", "ground", 1, 30, 30, []]
 ]],
 ["Firecracker", "common", 3, [
@@ -1187,13 +1120,12 @@ var cards = [
    0,
    0.35,
    [],
-   10                // ← was 1, now 30 frames = 1 sec delay
+   10
   ]
 ], "spell"],
 ["Mega Knight", "legendary", 7, [
   ["mega_knight", 3000, 3000, 170, 0, 0, 1.4, 8, 60,
    5, 5.5, 0, 50, -1, -1, false, 0, 0,
-//             ↑↑ was 90, now 11 (0.35 sec attack rate)
    "ground", "all", 1, 30, 30, [],
    [],
    "MegaKnightSlam"
@@ -1201,13 +1133,13 @@ var cards = [
 ]],
 ["Graveyard", "epic", 5, [
   ["graveyard",
-   0,           // [1] damage (none direct)
-   4.0,         // [2] radius
-   0,           // [3] speed
-   1,           // [4] crown penalty
-   [],          // [5] effects
-   1,           // [6] preLand (instant)
-   "persistent" // [7] spell type
+   0,
+   4.0,
+   0,
+   1,
+   [],
+   1,
+   "persistent"
   ]
 ], "spell"],
 
@@ -1229,25 +1161,16 @@ var cards = [
 ["Tesla", "common", 4, [
   ["tesla", 890, 890, 100, 0, 0, 1.0, 100, 0,
    5.5, 5.5, 0, 54, -1, -1, false, 0, 0,
-//                 ↑↑ was 30, now 54 (1.8 sec)
    "building", "all", 1, 0, 30, [],
    [["stun", 22]]
   ]
 ]],
-
-  // ===== 15. CANNON — defensive building =====
-
 
 ];
 
 function isSpellCard(cardIdx) {
   return cards[cardIdx][4] === "spell";
 }
-
-// ============================================================
-// Helper lookups — makes the rest of the code easier to read.
-// Use these instead of remembering which index means what.
-// ============================================================
 
 function getCardByName(name) {
   for (var i = 0; i < cards.length; i++) {
@@ -1263,20 +1186,12 @@ function getCardTroops(cardIndex){ return cards[cardIndex][3]; }
 function getOnHitEffects(troop) {
   return troop[24] || [];
 }
-// ============================================================
-// deepCopyTroop — IMPORTANT!
-// ------------------------------------------------------------
-// When a player plays a card, we need a FRESH copy of the troop
-// template — not a reference. Otherwise the first Knight would
-// share its hp/position/cooldown with every other Knight ever spawned.
-// This is the #1 source of weird bugs in the original engine.
-// ============================================================
+
 function deepCopyTroop(troopTemplate) {
   var copy = [];
   for (var i = 0; i < troopTemplate.length; i++) {
     var val = troopTemplate[i];
     if (Array.isArray(val)) {
-      // Effects array and special array — copy recursively
       var arrCopy = [];
       for (var j = 0; j < val.length; j++) {
         if (Array.isArray(val[j])) {

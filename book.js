@@ -1,11 +1,3 @@
-/* ============================================================
-   book.js — deckbook UI logic (the deck select screen)
-   ------------------------------------------------------------
-   Wrapped in an IIFE so its locals don't leak into the global
-   namespace and clash with the game's globals (bDeck, rDeck,
-   troops, etc.). All DOM lookups are scoped to .deckbook-app
-   so the script can't accidentally grab game elements.
-   ============================================================ */
 (function() {
   window.saveDecks = saveDecks;
 window.loadDecks = loadDecks;
@@ -13,16 +5,13 @@ window.loadDecks = loadDecks;
 
 
 const HIDDEN_CARDS = new Set([
-  // Spell payloads (the actual damage objects, not the playable card)
   "BarrelDeath", "BarrelExplosion", "BombExplosion", "BowlerRock",
   "ElectroGiantPulse", "ElectroPulseBomb", "ExecutionerAxe",
   "FireSpiritExplosion", "GolemDeath", "GolemExplosion",
   "IceBlast", "IceBomb", "IceSpiritFreeze", "MagicArrow",
   "MegaKnightLeapSlam", "RoyalDeliveryImpact",
-  // Death-spawn / multi-unit helpers (spawned by other cards)
   "SixLavaPups", "ThreeGoblins", "TwoBarbarians", "TwoSpearGoblins",
   "Skeletons4",
-  // Misnamed internal entries
   "ewiz","OneSpearGoblin","Barbarian","GoblinBrawler","OneSkeleton","Bomb","OneGoblin"
 ]);
 const DECKS_STORAGE_KEY = 'user_decks_v1';
@@ -39,8 +28,8 @@ function saveDecks() {
 
 function loadDecks() {
   try {
-    const raw = localStorage.getItem(DECKS_STORAGE_KEY);
-    if (!raw) return;
+ const raw = localStorage.getItem(DECKS_STORAGE_KEY);
+ if (!raw) return;
     const saved = JSON.parse(raw);
     for (let i = 0; i < NUM_DECKS && i < saved.length; i++) {
       decks[i] = saved[i].map(name =>
@@ -62,7 +51,7 @@ const CARDS = (typeof cards !== 'undefined' ? cards : [])
     const spriteName = (typeof SPRITE_ALIASES !== 'undefined' && SPRITE_ALIASES[rawName])
       ? SPRITE_ALIASES[rawName]
       : rawName;
-    return {
+return {
       name:   rawName,
       rarity: c[1],
       elixir: c[2],
@@ -70,16 +59,14 @@ const CARDS = (typeof cards !== 'undefined' ? cards : [])
     };
   });
 
-  // ---- State ----
   const NUM_DECKS = 3;
   const decks = Array.from({length: NUM_DECKS}, () => Array(8).fill(null));
   let activeDeckIdx = 0;
   let activeSlotIdx = null;
  
 
-  // ---- DOM refs (all scoped to the deckbook root) ----
   const root = document.querySelector('.deckbook-app');
-  if (!root) return; // bail safely if the deckbook markup isn't on this page
+  if (!root) return;
 
   const stage       = root.querySelector('#stage');
   const sidebar     = root.querySelector('#sidebar');
@@ -88,7 +75,6 @@ const CARDS = (typeof cards !== 'undefined' ? cards : [])
   const closeBtn    = root.querySelector('#closeSidebar');
 
 
-  // ---- Helpers ----
   function getSlotEl(deckIdx, slotIdx) {
     const side = slotIdx < 4 ? 'left' : 'right';
     return root.querySelector(
@@ -96,13 +82,11 @@ const CARDS = (typeof cards !== 'undefined' ? cards : [])
     );
   }
 
-  // ---- Render the card library (sidebar) ----
   function renderLibrary() {
     const q = searchInput.value.trim().toLowerCase();
     const inDeck = new Set(decks[activeDeckIdx].filter(c => c).map(c => c.name));
 
     const matches = CARDS.filter(c => {
-     
       if (q && !c.name.toLowerCase().includes(q)) return false;
       return true;
     });
@@ -134,7 +118,6 @@ const CARDS = (typeof cards !== 'undefined' ? cards : [])
 });
   }
 
-  // ---- Sidebar open/close ----
   function openSidebar(deckIdx, slotIdx) {
     activeDeckIdx = deckIdx;
     activeSlotIdx = slotIdx;
@@ -155,10 +138,9 @@ const CARDS = (typeof cards !== 'undefined' ? cards : [])
     searchInput.value = '';
   }
 
-  // ---- Add / remove cards from a deck ----
   function placeCard(card) {
     if (activeSlotIdx === null) return;
-    if (decks[activeDeckIdx].some(c => c && c.name === card.name)) return; // no dupes
+    if (decks[activeDeckIdx].some(c => c && c.name === card.name)) return;
     decks[activeDeckIdx][activeSlotIdx] = card;
       lastModifiedDeck = activeDeckIdx;
     renderDeck(activeDeckIdx);
@@ -174,7 +156,6 @@ const CARDS = (typeof cards !== 'undefined' ? cards : [])
       saveDecks();
   }
 
-  // ---- Render a deck's 8 slots ----
   function renderDeck(deckIdx) {
     let firstEmpty = -1;
     for (let i = 0; i < 8; i++) {
@@ -183,9 +164,9 @@ const CARDS = (typeof cards !== 'undefined' ? cards : [])
       const card = decks[deckIdx][i];
       slot.classList.remove('hint', 'filled');
       slot.removeAttribute('data-rarity');
-      if (card) {
-        slot.classList.add('filled');
-        slot.dataset.rarity = card.rarity;
+ if (card) {
+ slot.classList.add('filled');
+  slot.dataset.rarity = card.rarity;
        const sprite = window.sprites && window.sprites[card.spriteName];
 const inner = sprite
   ? `<img src="${sprite.canvas.toDataURL()}" alt="${card.name}" style="width:100%;height:100%;object-fit:contain;">`
@@ -195,13 +176,12 @@ slot.innerHTML = `
   <button class="remove-btn" aria-label="Remove">×</button>
   ${inner}
 `;
-        slot.querySelector('.remove-btn').addEventListener('click', e => removeCard(deckIdx, i, e));
-      } else {
+  slot.querySelector('.remove-btn').addEventListener('click', e => removeCard(deckIdx, i, e));
+ } else {
         slot.innerHTML = '';
         if (firstEmpty === -1) firstEmpty = i;
       }
     }
-    // The hint pulses on the first empty slot of this deck
     if (firstEmpty !== -1) {
       const hintSlot = getSlotEl(deckIdx, firstEmpty);
       if (hintSlot) {
@@ -211,12 +191,11 @@ slot.innerHTML = `
     }
   }
 
-  // ---- Wire up clicks ----
   root.querySelectorAll('.deck-half').forEach(half => {
     const deckIdx = parseInt(half.dataset.deck);
     half.querySelectorAll('.card-slot').forEach(slot => {
-      const slotIdx = parseInt(slot.dataset.slot);
-      slot.addEventListener('click', e => {
+ const slotIdx = parseInt(slot.dataset.slot);
+  slot.addEventListener('click', e => {
         if (e.target.classList.contains('remove-btn')) return;
         openSidebar(deckIdx, slotIdx);
       });
@@ -230,13 +209,10 @@ slot.innerHTML = `
   searchInput.addEventListener('input', renderLibrary);
 
 
-  // ---- Initial render ----
  loadDecks();
   for (let i = 0; i < NUM_DECKS; i++) renderDeck(i);
   renderLibrary();
 
-  // ---- Optional: expose decks to the game so it can grab the chosen one ----
-  // Your other scripts can read window.deckbookGetDeck(0) to get Deck I, etc.
   window.deckbookGetDeck = (idx) => decks[idx].slice();
   window.deckbookGetLastModified = () => lastModifiedDeck;
   window.onSpritesReady = function() {
@@ -244,19 +220,8 @@ slot.innerHTML = `
   for (let i = 0; i < NUM_DECKS; i++) renderDeck(i);
 };
 
-// ============================================================
-// SUGGESTED DECKS — populated from window.proDecks (set by ui.js)
-// ------------------------------------------------------------
-// Each deck is a 8-card list using API names (e.g. "P.E.K.K.A.").
-// We map those back to cards in `cards.js` so clicking a deck
-// fills all 8 slots of the currently-open deck.
-// ============================================================
-
-// Reverse-map: API name → cards.js raw name (handles aliases)
 function findCardsJsName(apiName) {
-  // First try direct match
   if (CARDS.find(c => c.name === apiName)) return apiName;
-  // Then check the alias map (raw → API)
   if (typeof SPRITE_ALIASES !== 'undefined') {
     for (const raw in SPRITE_ALIASES) {
       if (SPRITE_ALIASES[raw] === apiName) {
@@ -278,14 +243,12 @@ function renderSuggestedDecks() {
 
   list.innerHTML = '';
   decks.forEach((deck, deckIdx) => {
-    // Resolve each card to its sprite + cards.js name
     const resolved = deck.cards.map(apiName => {
       const cardsJsName = findCardsJsName(apiName);
       const sprite = window.sprites && window.sprites[apiName];
       return { apiName, cardsJsName, sprite };
     });
 
-    // Compute avg elixir from cards.js (skip missing)
     const elixirValues = resolved
       .map(r => r.cardsJsName ? CARDS.find(c => c.name === r.cardsJsName)?.elixir : null)
       .filter(e => typeof e === 'number');
@@ -315,15 +278,12 @@ function renderSuggestedDecks() {
 }
 
 function applySuggestedDeck(deck) {
-  // Build new deck: fill what we can, leave missing slots null
   const newCards = deck.cards.map(apiName => {
     const cardsJsName = findCardsJsName(apiName);
     if (!cardsJsName) return null;
     return CARDS.find(c => c.name === cardsJsName) || null;
   });
 
-  // Apply to the currently-active de
-  // ck
   decks[activeDeckIdx] = newCards;
     lastModifiedDeck = activeDeckIdx;
   renderDeck(activeDeckIdx);
@@ -331,15 +291,12 @@ function applySuggestedDeck(deck) {
    saveDecks();    
 }
 
-// Collapse toggle
 document.getElementById('suggestedToggle').addEventListener('click', () => {
   document.getElementById('suggestedDecksSection').classList.toggle('collapsed');
 });
 
-// Initial render — may be empty if proDecks hasn't loaded yet
 renderSuggestedDecks();
 
-// Hook into the load lifecycle so we re-render when proDecks arrives
 const originalSpritesReady = window.onSpritesReady;
 window.onSpritesReady = function() {
   if (originalSpritesReady) originalSpritesReady();
@@ -356,21 +313,17 @@ window.startBattleTransition = function(onBlackout) {
   const cbCover  = document.getElementById('checkbox-cover');
   const book     = deckbook.querySelector('.book');
 
-  // Open the cover immediately
   cbCover.checked = true;
 
-  // Start riffling pages right after the cover finishes opening (~1s).
-  // 300ms between spawns = the slower, deliberate riffle you asked for.
   const RIFFLE_START   = 0;
   const RIFFLE_PERIOD  = 300;
-  const PAGES_BEFORE_ZOOM = 0;     // let 3 pages flip before zoom kicks in
+  const PAGES_BEFORE_ZOOM = 0;
 
   let riffleInterval = null;
   
     riffleInterval = setInterval(() => spawnRifflePage(book), RIFFLE_PERIOD);
   
 
-  // Zoom + darken don't start until we've seen ~3 pages flip
   const ZOOM_START = 0;
   setTimeout(() => {
     deckbook.classList.add('entering-battle');
@@ -381,12 +334,10 @@ setTimeout(() => {
   deckbook.classList.add('cards-hidden');
 }, HIDE_CARDS_AT);
 
-  // Blackout 1.4s after zoom starts (matches the scale transition duration)
   const BLACKOUT = ZOOM_START + 4000;
 setTimeout(() => {
   clearInterval(riffleInterval);
   if (typeof onBlackout === 'function') onBlackout();
-  // Give the new screen one frame to render, then fade the overlay out
   setTimeout(() => overlay.classList.remove('active'), 100);
   resetState();
 }, BLACKOUT);
@@ -398,23 +349,14 @@ function spawnRifflePage(book) {
   page.className = 'page riffle-page';
   page.innerHTML = '<div class="front-page"></div><div class="back-page"></div>';
 
-  // Anchor explicitly to top-left of book (belt-and-suspenders)
   page.style.top = '0';
   page.style.left = '0';
   page.style.zIndex = '50';
   page.style.transition = `transform ${FLIP_MS}ms ease-in`;
 
-  // Insert BEFORE .back-cover so the page sits in the same DOM/layout
-  // slot as the original #page1/#page2/#page3 — same static position,
-  // same scale behavior, same z-context.
   const backCover = book.querySelector('.back-cover');
   book.insertBefore(page, backCover);
 
-  // Force a layout flush so the browser commits the initial rotateY(0)
-  // from the .page CSS rule BEFORE we mutate it. Without this, the
-  // browser collapses both states into one and skips the transition —
-  // which is the "weird animation" you saw (pages snapping flat instead
-  // of flipping).
   void page.offsetHeight;
 
   page.style.transform = 'rotateY(-180deg)';
@@ -422,31 +364,20 @@ function spawnRifflePage(book) {
   setTimeout(() => page.remove(), FLIP_MS + 100);
 }
 
-// Track the page flip — the deck currently being viewed counts as "last touched"
 const cover = document.getElementById('checkbox-cover');
 const page1 = document.getElementById('checkbox-page1');
 const page2 = document.getElementById('checkbox-page2');
 
 function updateActiveDeckFromPage() {
-  // Mapping based on which checkboxes are checked:
-  //   cover open + page1 open + page2 open  → Deck III
-  //   cover open + page1 open                → Deck II
-  //   cover open                              → Deck I
   if (page2.checked)      lastModifiedDeck = 2;
   else if (page1.checked) lastModifiedDeck = 1;
   else if (cover.checked) lastModifiedDeck = 0;
-  // Cover closed → don't change anything
 
-  saveDecks();   // persist so refreshing keeps the current deck as "last"
+  saveDecks();
 }
 
 cover.addEventListener('change', updateActiveDeckFromPage);
 page1.addEventListener('change', updateActiveDeckFromPage);
 page2.addEventListener('change', updateActiveDeckFromPage);
-
-
-
-
-
 
 })();

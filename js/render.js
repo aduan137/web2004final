@@ -1,20 +1,4 @@
-// ============================================================
-// render.js — drawing troops, towers, and projectiles
-// ------------------------------------------------------------
-// Everything here runs inside the p5.js canvas.
-// ============================================================
 
-
-// ============================================================
-// drawTroop(troop, team)
-// ------------------------------------------------------------
-//   troop: the positional-array troop (from bTroops or rTroops)
-//   team:  "blue" (player) or "red" (enemy) — affects fallback color
-//
-// If a sprite exists for troop[0], draws it. Otherwise falls back
-// to a colored circle so the game is still playable without art.
-// Health bar is drawn above the troop regardless.
-// ============================================================
 function drawTroop(troop, team) {
   var stealthAlpha = (troop[35] === 1) ? 128 : 255;
 
@@ -56,7 +40,7 @@ function drawTroop(troop, team) {
   baseSize = baseSize * animScale;
   var size = baseSize * (1 + pulseAmount);
 
-  // ----- SHARED: facing angle + swing -----
+  
   var facingDx = 0;
   var facingDy = 0;
   var enemies = (team === "blue") ? rTroops : bTroops;
@@ -87,10 +71,10 @@ function drawTroop(troop, team) {
     }
   }
 
-  // ----- DRAW: fallback if no sprite, else sprite -----
+  
  var cardName = troop[39];
 if (!cardName || !sprites[cardName]) {
-    // FALLBACK — colored rect with all your existing logic
+   
     push();
     translate(x, y);
     rotate(drawAngle + swingOffset);
@@ -103,7 +87,7 @@ if (!cardName || !sprites[cardName]) {
     else                      fill(230, 40, 40, stealthAlpha);
     rect(-size/2, -size/2, size, size);
 
-    // Stick — skip for towers
+    
 pop();
 
 // Label
@@ -125,7 +109,7 @@ textAlign(LEFT, BASELINE);
 textSize(10);
   
   } else {
-    // SPRITE
+   
     push();
     translate(x, y);
     rotate(drawAngle + swingOffset+ Math.PI /2);
@@ -150,7 +134,7 @@ if (troop[23]) {
     pop();
   }
 
-  // ----- SHARED: hunter cone -----
+
   if (troop[0] === "hunter" && troop[12] > 0 && troop[11] > 0) {
     var coneProgress = troop[11] / troop[12];
     if (coneProgress > 0.88) {
@@ -171,7 +155,7 @@ if (troop[23]) {
     }
   }
 
-  // ----- SHARED: shield bar -----
+  
   if (troop[30] > 0 && troop[31] > 0) {
     var shieldBarW = size;
     var shieldBarH = 4;
@@ -185,7 +169,7 @@ if (troop[23]) {
     rect(shieldBarX, shieldBarY, shieldBarW * (troop[31] / troop[30]), shieldBarH);
   }
 
-  // ----- SHARED: health bar -----
+
   if (hp < maxHp && hp > 0) {
     var barW = size;
     var barH = 4;
@@ -204,7 +188,7 @@ if (troop[23]) {
     rect(barX, barY, barW * pct, barH);
   }
 
-  // ----- SHARED: Sparky ready glow -----
+  
   if (troop[0] === "sparky" && troop[11] <= 0) {
     noStroke();
     var pulseAlpha = 150 + Math.sin(frameCount * 0.2) * 80;
@@ -212,11 +196,7 @@ if (troop[23]) {
     ellipse(x, y - size/2 - 18, 12, 12);
   }
 }
-// ============================================================
-// drawTroops() — draws every troop on both teams.
-// Called once per frame from main.js.
-// ================================
-// ============================
+
 function drawTroops() {
   // Enemy first (so player troops render on top if they overlap)
   for (var i = 0; i < rTroops.length; i++) {

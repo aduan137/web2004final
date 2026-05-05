@@ -1,18 +1,9 @@
-// ============================================================
-// ui.js — placeholder battle button + sprite loader
-// ============================================================
-// ============================================================
-// PRO DECKS — fetched from leaderboard players, cached locally
-// ------------------------------------------------------------
-// Pulls battlelogs from a slice of mid-leaderboard players
-// (rank 800-850, where decks are meta but not weird-tech).
-// Cached in localStorage for 6 hours so we don't hammer the API.
-// ============================================================
+
 
 const DECKS_CACHE_KEY = 'pro_decks_cache_v1';
-const DECKS_CACHE_HOURS = 6;
+const DECKS_CACHE_HOURS = 1;
 
-window.proDecks = [];   // global, read by book.js
+window.proDecks = [];   
 
 async function loadProDecks() {
   // 1. Check localStorage cache first
@@ -28,10 +19,10 @@ async function loadProDecks() {
       }
     }
   } catch (err) {
-    // bad/corrupted cache — fall through to fresh fetch
+  
   }
 
-  // 2. No fresh cache → fetch from API
+  
   console.log('Pro decks cache stale or missing, fetching fresh data...');
   try {
     const decks = await fetchDecksFromLeaderboard();
@@ -48,26 +39,33 @@ async function loadProDecks() {
 }
 
 async function fetchDecksFromLeaderboard() {
-  const TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImViYTM4OWU4LTFlOGQtNDQ5Zi05ZWNkLTFkNzdkMjk3NzgyZSIsImlhdCI6MTc3NzUwNDM5OCwic3ViIjoiZGV2ZWxvcGVyLzAyMGQ4MjMyLTZkM2EtMzBhYS04YWQ1LTIzYTlmN2I4YWFjMyIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI0NS43OS4yMTguNzkiXSwidHlwZSI6ImNsaWVudCJ9XX0.0_Ik5sJoRI9SXxeqtYeC6BQoneFKuK_n0SbNbLVpk3Tnr4t7ihTY8LsuZKQLnSRTcdeeVi-bN_OV7LwdjBqa8Q';   // same token as loadCardSprites
+  const TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImViYTM4OWU4LTFlOGQtNDQ5Zi05ZWNkLTFkNzdkMjk3NzgyZSIsImlhdCI6MTc3NzUwNDM5OCwic3ViIjoiZGV2ZWxvcGVyLzAyMGQ4MjMyLTZkM2EtMzBhYS04YWQ1LTIzYTlmN2I4YWFjMyIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI0NS43OS4yMTguNzkiXSwidHlwZSI6ImNsaWVudCJ9XX0.0_Ik5sJoRI9SXxeqtYeC6BQoneFKuK_n0SbNbLVpk3Tnr4t7ihTY8LsuZKQLnSRTcdeeVi-bN_OV7LwdjBqa8Q';
   const PROXY = 'https://proxy.royaleapi.dev/v1';
 
   async function api(path) {
-    const r = await fetch(PROXY + path, {
-      headers: { Authorization: 'Bearer ' + TOKEN }
-    });
+    const r = await fetch(PROXY + path, { headers: { Authorization: 'Bearer ' + TOKEN } });
     if (!r.ok) throw new Error(`${path} → ${r.status}`);
     return r.json();
   }
 
-  // Get top 1000, slice 800-850
-  const lb = await api('/locations/global/pathoflegend/players?limit=1000');
-  const slice = lb.items.slice(799, 850);
+ 
+  const clans = await api('/locations/global/rankings/clans?limit=1');
+  if (!clans.items?.length) throw new Error('Clan leaderboard empty');
+  const topClan = clans.items[0];
+  console.log(`Top clan: ${topClan.name} (${topClan.tag})`);
 
-  const deckCounts = new Map();   // key → { cards, count }
 
-  for (const player of slice) {
+  const clanTag = topClan.tag.replace('#', '');
+  const members = await api(`/clans/%23${clanTag}/members`);
+  const playerTags = members.items.slice(0, 50).map(m => m.tag);
+  console.log(`Got ${playerTags.length} player tags from top clan`);
+
+
+  const deckCounts = new Map();
+
+  for (const playerTag of playerTags) {
     try {
-      const tag = player.tag.replace('#', '');
+      const tag = playerTag.replace('#', '');
       const battles = await api(`/players/%23${tag}/battlelog`);
       for (const b of battles) {
         if (!b.team || !b.team[0] || !b.team[0].cards) continue;
@@ -78,12 +76,13 @@ async function fetchDecksFromLeaderboard() {
         deckCounts.get(key).count++;
       }
     } catch (err) {
-      // Skip individual player failures, keep going
+      
     }
-    await new Promise(r => setTimeout(r, 200));   // throttle
+    await new Promise(r => setTimeout(r, 200));
   }
 
-  // Top 12 most common
+  console.log(`Aggregated ${deckCounts.size} unique decks from top clan members`);
+
   return [...deckCounts.values()]
     .sort((a, b) => b.count - a.count)
     .slice(0, 12);
@@ -95,7 +94,6 @@ document.querySelectorAll('.opponent-card').forEach(btn => {
     const aiDeckChoice = parseInt(btn.dataset.aiDeck, 10);
     aiDeckIndex = aiDeckChoice;
 
-    // Set up the battle
     bDeck = window.pendingPlayerDeck;
     bOrder = [0, 1, 2, 3, 4, 5, 6, 7];
 
@@ -117,7 +115,7 @@ window.addEventListener('load', async () => {
     if (typeof onSpritesReady === 'function') onSpritesReady();
     if (typeof onProDecksReady === 'function') onProDecksReady();
 
-    // Done loading: hide the "Loading…" text, reveal the Continue button.
+
     document.getElementById('loadingMessage').style.display = 'none';
     document.getElementById('loadingContinueBtn').style.display = '';
   } catch (err) {
@@ -127,9 +125,14 @@ window.addEventListener('load', async () => {
   }
 });
 
-// Continue button dismisses the whole loading screen
+
 document.getElementById('loadingContinueBtn').addEventListener('click', () => {
   document.getElementById('loadingScreen').style.display = 'none';
+  const audio = document.getElementById('bgMusic');
+  audio.volume = 0.5;
+  audio.play();
+
+
 });
 
 function showApp() {
@@ -171,11 +174,10 @@ const url = `${PROXY}?url=${encodeURIComponent(rawUrl)}`;
   console.log('Sprites loaded:', Object.keys(window.sprites).length);
 }
 
-// Wire up the placeholder button
 document.getElementById('placeholderBattleBtn').addEventListener('click', () => {
-  // Validate the player's deck first
-  const idx = window.deckbookGetLastModified();
-  const chosenDeck = window.deckbookGetDeck(idx);
+
+        const idx = window.deckbookGetLastModified();
+      const chosenDeck = window.deckbookGetDeck(idx);
   if (chosenDeck.some(c => c === null)) {
     alert('Fill all 8 cards in your deck before battling.');
     return;
@@ -188,19 +190,18 @@ document.getElementById('placeholderBattleBtn').addEventListener('click', () => 
     return;
   }
 
-  // Stash deck for later (opponent picker reads this)
   window.pendingPlayerDeck = cardIndices;
 
-  // Hide the battle button so it doesn't sit on top of the inflating book
-  document.getElementById('placeholderBattleBtn').style.display = 'none';
 
-  // Play the page-flip + zoom animation. When it fades to black,
-  // swap to the opponent picker.
+  document.getElementById('placeholderBattleBtn').style.display = 'none';
+  document.getElementById('bgMusic').pause();  
+
+
   window.startBattleTransition(() => {
     document.getElementById('deckSelectScreen').style.display = 'none';
     document.getElementById('opponentSelectScreen').style.display = '';
 
-    // Populate the four opponent card images
+
     ["Balloon", "P.E.K.K.A", "Golem", "Goblin Barrel"].forEach((name, i) => {
       const sprite = window.sprites && window.sprites[name];
       const img = document.getElementById('opponentImg' + i);
@@ -212,5 +213,4 @@ document.getElementById('placeholderBattleBtn').addEventListener('click', () => 
 
 
 
-// Stub the deckbook bridge
 function buildDeckSelectUI(onStart) {}

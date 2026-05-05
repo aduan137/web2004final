@@ -1,34 +1,8 @@
-// ============================================================
-// projectiles.js — projectile movement, hit detection, damage
-// ------------------------------------------------------------
-// Ported from the original engine. Simplified to skip special
-// mechanics (chains, spreads, spell effects) that we don't have
-// cards for yet — those can be added as we build cards that
-// need them.
-//
-// Projectile data format (from troops.js attemptAttack):
-//   [0] name          e.g. "knight_proj"
-//   [1] row           current position
-//   [2] col           current position
-//   [3] targetIdx     index into the target team's troop array
-//   [4] damage
-//   [5] speed         typically 810
-//   [6] aoe           splash radius; 0 = single-target
-// ============================================================
 
-
-// ---- CONSTANTS ----
-// HIT_THRESHOLD: how close a non-AoE projectile needs to be to its
-// target before we count it as a hit. 0.2 tiles = ~3 pixels.
-// Small enough to look precise, large enough that the projectile
-// can never "tunnel past" its target due to framerate jitter.
 var HIT_THRESHOLD = 0.2;
 
 
-// ============================================================
-// updateProjectiles() — called once per frame from main.js.
-// Processes all four projectile arrays.
-// ============================================================
+
 function updateProjectiles() {
   // Blue projectiles hit red enemies
   updateProjectileArray(bProj, rTroops, "blue");
@@ -37,22 +11,13 @@ function updateProjectiles() {
 }
 
 
-// ============================================================
-// updateProjectileArray(projArr, enemies, team)
-// ------------------------------------------------------------
-// Iterates in REVERSE so we can splice dead projectiles out
-// during the loop without breaking the index.
-// ============================================================
+
 function updateProjectileArray(projArr, enemies, team) {
   for (var i = projArr.length - 1; i >= 0; i--) {
     var proj = projArr[i];
     var targetIdx = proj[3];
 
-    // --- 1. Validate target ---
-    // If the original target is gone (somehow out of array bounds
-    // or dead), delete the projectile. Real Clash sometimes keeps
-    // the projectile flying to the last-known position, but for
-    // a first pass we just drop it.
+ 
     if (targetIdx < 0 || targetIdx >= enemies.length) {
       projArr.splice(i, 1);
       continue;
@@ -90,14 +55,7 @@ function updateProjectileArray(projArr, enemies, team) {
 }
 
 
-// ============================================================
-// applyProjectileDamage(proj, enemies, team)
-// ------------------------------------------------------------
-// For a single-target projectile, damages only the stored target.
-// For an AoE projectile, damages everyone within aoe radius of
-// the projectile's CURRENT POSITION (not target position — this
-// matters when projectile overshoots or hits near-miss).
-// ============================================================
+
 function applyProjectileDamage(proj, enemies, team) {
   
    if (proj[0] === "firecracker_proj") {
@@ -187,11 +145,7 @@ function applyOnHitEffects(target, onHit) {
 }
 
 
-// ============================================================
-// drawProjectiles() — called once per frame from main.js during render.
-// Draws each projectile as a small colored dot. Blue for player,
-// red for enemy, so you can tell them apart.
-// ============================================================
+
 function drawProjectiles() {
   noStroke();
 

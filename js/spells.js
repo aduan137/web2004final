@@ -1,13 +1,4 @@
-// ============================================================
-// spells.js — active spells (projectile flight + landing)
-// ------------------------------------------------------------
-// A "spell" is a projectile thrown from the king tower that
-// explodes on arrival, damaging enemies in a radius.
-//
-// activeSpells is a list of in-flight spells. Each frame:
-//   1. Move each spell toward its target point
-//   2. When it arrives, apply damage + effects, remove it
-// ============================================================
+
 
 
 // Active spells from each team
@@ -15,12 +6,7 @@ var bActiveSpells = [];
 var rActiveSpells = [];
 
 
-// ============================================================
-// castSpell(cardIdx, row, col, team)
-// ------------------------------------------------------------
-// Called when the player confirms a spell placement.
-// Launches a projectile from the team's king tower toward (row, col).
-// ============================================================
+
 function castSpell(cardIdx, row, col, team,facingDeg) {
   var spellData = cards[cardIdx][3][0];
   var name = spellData[0];
@@ -134,10 +120,7 @@ function castSpell(cardIdx, row, col, team,facingDeg) {
 }
 
 
-// ============================================================
-// updateSpells() — called once per frame from main.js
-// Processes flight, landing, and impact for all active spells.
-// ============================================================
+
 function updateSpells() {
   updateSpellArray(bActiveSpells, rTroops, "blue");
   updateSpellArray(rActiveSpells, bTroops, "red");
@@ -241,11 +224,11 @@ if (s[12] === "piercing") {
   if (dist <= stepLen) {
     // Reached end of current phase
     if (s[16] === "outbound") {
-      // Switch to inbound — reverse direction, target = original cast point
+   
       s[16] = "inbound";
-      s[3] = s[17];   // original start row
-      s[4] = s[18];   // original start col
-      s[13] = {};     // reset hit-tracking so enemies can be hit again
+      s[3] = s[17]; 
+      s[4] = s[18];  
+      s[13] = {};     
       continue;
     } else {
       // Inbound phase done — clean up
@@ -316,11 +299,7 @@ if (s[12] === "piercing") {
 }
 
 
-// ============================================================
-// applySpellDamage — called when a spell lands.
-// Damages every enemy within `radius` tiles of the impact point.
-// Applies any effects (e.g. stun) from the spell's effect list.
-// ============================================================
+
 function applySpellDamage(s, enemies, team) {
   var tgtRow  = s[3];
   var tgtCol  = s[4];
@@ -341,7 +320,7 @@ function applySpellDamage(s, enemies, team) {
     var e = enemies[j];
     if (e[1] <= 0) continue;
     if (e[35] === 1) continue;
-    // Lightning hits ground only? real Clash hits air too — change as desired
+  
     
     var dr = e[4] - hitX;
     var dc = e[5] - hitY;
@@ -458,9 +437,7 @@ if (s[0] === "goblin_barrel") {
 }
 
 
-// ============================================================
-// drawSpells() — renders in-flight spells and impact flashes.
-// ============================================================
+
 function drawSpells() {
   drawSpellArray(bActiveSpells, "blue");
   drawSpellArray(rActiveSpells, "red");
@@ -517,7 +494,7 @@ function drawSpellArray(arr, team) {
       continue;
     }
 
-    // Piercing spell (Executioner Axe) — red circle
+  
     if (s[12] === "piercing") {
       noStroke();
       fill(180, 60, 60);
@@ -527,14 +504,14 @@ function drawSpellArray(arr, team) {
     }
 
     if (s[10] > 0) {
-      // Impact flash — translucent orange circle matching AoE
+      
       noStroke();
       var flashAlpha = map(s[10], 8, 0, 180, 0);
       fill(255, 140, 40, flashAlpha);
       ellipse(tileToPx(s[4]), tileToPx(s[3]),
               s[6] * 2 * TILE_SIZE, s[6] * 2 * TILE_SIZE);
     } else {
-      // In-flight projectile — small orange blob with a trail feel
+      
       noStroke();
       fill(255, 120, 40);
       ellipse(x, y, 10, 10);

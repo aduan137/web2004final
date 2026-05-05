@@ -1,33 +1,10 @@
-// ============================================================
-// troops.js — ported from the original engine
-// ------------------------------------------------------------
-// Faithful translation of the original's targeting and movement
-// rules, cleaned up and commented.
-//
-// Troop data layout (positional array):
-//   [0]  name          [13] ret            [17] aoe
-//   [1]  hp            [14] targetIdx      [18] type
-//   [2]  maxHp         [15] locked         [19] targetType
-//   [3]  damage        [16] facingAngle    [20] crownPenalty
-//   [4]  row (y-tile)                      [21] loadTime
-//   [5]  col (x-tile)                      [22] deployTime
-//   [6]  size                              [23] effects[]
-//   [7]  mass
-//   [8]  speed         [9]  attackRange    [10] sightRange
-//   [11] cooldown      [12] maxCooldown
-// ============================================================
 
 
-// ---- CONSTANTS ----
-// SPDM matches the original engine's spdm = 1800. Speed 60 / 1800
-// = ~0.033 tiles/frame = ~1 tile per second at 30 fps. Knight pace.
+
 var SPDM = 1800;
 var PROJECTILE_SPEED = 810;
 
 
-// ============================================================
-// updateTroops() — called once per frame from main.js
-// ============================================================
 function updateTroops() {
   for (var i = 0; i < bTroops.length; i++) {
     var t = bTroops[i];
@@ -47,12 +24,7 @@ function updateTroops() {
     }
   }
 }
-// ============================================================
-// resolveOverlaps — runs once per frame, after all movement.
-// Any two troops whose hitboxes overlap get pushed apart
-// symmetrically (each moves half the overlap distance).
-// Towers are skipped (they don't move).
-// ============================================================
+
 function resolveOverlaps() {
   // Combine all troops into one list for pairwise check
   // (we want troops to push other troops on either team)
@@ -63,16 +35,16 @@ function resolveOverlaps() {
       var a = all[i];
       var b = all[j];
       
-      // Skip dead troops
+   
       if (a[1] <= 0 || b[1] <= 0) continue;
-      // Skip troops still deploying
+    
       if (a[22] > 0 || b[22] > 0) continue;
-      // Skip buildings (towers, defensive buildings) — they don't move
+   
       if (a[18] === "building" || b[18] === "building") continue;
-      // Skip air vs ground (different layers don't collide)
+      
       if (a[18] === "air" && b[18] !== "air") continue;
       if (b[18] === "air" && a[18] !== "air") continue;
-      // Skip bombs
+    
       if (a[18] === "bomb" || b[18] === "bomb") continue;
 
       var dr = b[4] - a[4];
@@ -81,13 +53,13 @@ function resolveOverlaps() {
       var combinedRadii = a[6] / 2 + b[6] / 2;
 
       if (dist < combinedRadii && dist > 0.001) {
-        // Overlap exists — calculate push amount
+      
         var overlap = combinedRadii - dist;
-        var nx = dr / dist;   // normalized direction from a to b
+        var nx = dr / dist;   
         var ny = dc / dist;
         var push = overlap / 2;
 
-        // Push a backward, b forward — both by half the overlap
+        
         a[4] -= nx * push;
         a[5] -= ny * push;
         b[4] += nx * push;
@@ -96,23 +68,16 @@ function resolveOverlaps() {
     }
   }
 }
-// ============================================================
-// dealDamage(target, amount)
-// ------------------------------------------------------------
-// Apply damage to a target, respecting shield mechanics.
-// If the target has a shield (data[31] > 0), the shield absorbs
-// the damage first. Overflow damage is WASTED — it does not
-// carry over to the target's HP.
-// Returns the actual damage that was applied (for logging).
-// ============================================================
+
+
 function dealDamage(target, amount) {
   if (amount <= 0) return 0;
   
-  // Shield absorbs first
+
   if (target[31] > 0) {
     target[31] -= amount;
     if (target[31] < 0) target[31] = 0;
-    // Damage was absorbed by shield, none goes to HP
+
     return amount;
   }
   
@@ -120,17 +85,7 @@ function dealDamage(target, amount) {
   target[1] -= amount;
   return amount;
 }
-// ============================================================
-// updateSingleTroop — the per-troop AI cycle
-// ------------------------------------------------------------
-// Order of operations (matches original):
-//   1. Skip if dead
-//   2. Tick deploy-time, exit if still deploying
-//   3. Tick cooldown
-//   4. Validate current lock (if any)
-//   5. If not locked, re-scan for closest enemy in sight
-//   6. Based on target & distance: attack, chase, or default-path
-// ============================================================
+
 function updateSingleTroop(data, enemies, team) {
   // Dead — skip
   if (data[1] <= 0) return;
@@ -138,10 +93,7 @@ function updateSingleTroop(data, enemies, team) {
       var slowed = false;
       var raged = false;
       if (data[0] === "royal_ghost") {
-  // Track time since last attack via cooldown timer
-  // When cooldown is high (>= maxCooldown - 30), recently attacked → visible
-  // When cooldown is low (< maxCooldown - 30 OR didn't recently attack), hidden
-  // Simpler: when cooldown was recently reset, visible. After 30 frames of decay, hidden.
+  
   if (data[12] - data[11] < 30 && data[11] > 0) {
     data[35] = 0;   // visible (just attacked)
   } else {
@@ -154,10 +106,9 @@ function updateSingleTroop(data, enemies, team) {
       eff[1]--;  // decrement timer
       if (eff[1] <= 0) {
         if (eff[0] === "conditional_summon") {
-  // Format: ["conditional_summon", framesRemaining, interval, "CardName"]
-  // Only spawns if there's an enemy in sight range
+
   
-  // Check if there's an enemy in range
+
   var hasTarget = false;
   for (var k = 0; k < enemies.length; k++) {
     var ee = enemies[k];
@@ -179,26 +130,26 @@ function updateSingleTroop(data, enemies, team) {
     spawnCard(team, summonName, data[4]-1, data[5]+0.1);
     say(team + " " + data[0] + " spawned " + summonName);
   }
-  eff[1] = eff[2];   // reset timer regardless (so we don't burst-spawn after enemy enters range)
-  continue;          // skip splice
+  eff[1] = eff[2];  
+  continue;          
 }
            if (eff[0] === "summon") {
       var summonName = eff[3];
       spawnCard(team, summonName, data[4], data[5]);
       eff[1] = eff[2];   // reset timer to interval
       say(team + " " + data[0] + " summoned " + summonName);
-      continue;          // skip splice
+      continue;        
     }
        if (eff[0] === "leap") {
   var leapTgtIdx = eff[2];
   if (leapTgtIdx >= 0 && leapTgtIdx < enemies.length) {
     var leapTgt = enemies[leapTgtIdx];
     if (leapTgt[1] > 0) {
-      // ===== Set animation fields BEFORE teleporting =====
+    
       data[36] = data[4];   // store old row
       data[37] = data[5];   // store old col
       data[38] = (data[0] === "bandit") ? 5 : 8;   // duration depends on troop
-      // ===== END animation setup =====
+     
       
       // Now teleport (existing code)
       var inFrontDir = (team === "blue") ? 1 : -1;
@@ -230,7 +181,7 @@ function updateSingleTroop(data, enemies, team) {
 }
 if (eff[0] === "chain_dash") {
   var hitsLeft = eff[2];
-  var hitIdxs = eff[3];   // ← now an object, not a single index
+  var hitIdxs = eff[3];  
   
   if (hitsLeft <= 0) {
     data[23].splice(e, 1);
@@ -243,7 +194,7 @@ if (eff[0] === "chain_dash") {
   var nextDist = 4.0;
   
   for (var k = 0; k < enemiesArrCD.length; k++) {
-    if (hitIdxs[k]) continue;   // ← skip ALL previously hit targets
+    if (hitIdxs[k]) continue; 
     var ee = enemiesArrCD[k];
     if (ee[1] <= 0) continue;
     if (ee[22] > 0) continue;
@@ -270,7 +221,7 @@ if (eff[0] === "chain_dash") {
     
     eff[1] = 3;
     eff[2]--;
-    hitIdxs[nextIdx] = true;   // ← mark this target as hit so we never come back
+    hitIdxs[nextIdx] = true;   
   } else {
     data[23].splice(e, 1);
   }
@@ -279,8 +230,8 @@ if (eff[0] === "chain_dash") {
 if (eff[0] === "go_stealth") {
   data[35] = 1;
   say(team + " " + data[0] + " went stealth");
-  // Push a follow-up effect that turns her visible again
-  data[23].push(["go_visible", 240]);   // 180 frames = 6 sec
+ 
+  data[23].push(["go_visible", 240]);   
   data[23].splice(e, 1);
   continue;
 }
@@ -323,20 +274,17 @@ if (eff[0] === "delayed_spell") {
     }
   }
 
-  // Stunned? can't act this frame at all (no deploy tick, no cooldown tick,
-  // no targeting, no attack). We still allow the HP check above so dead
-  // stunned troops still get removed.
+
   if (stunned) return;
 
-  // Deploy time — freeze until zero
+
   if (data[22] > 0) {
     data[22]--;
     return;
   }
 
-  // Cooldown ticks regardless
   if (data[11] > 0) data[11]--;
-    // ===== SPECIAL CASE: Ram Rider — fires snare at nearest troop =====
+
   if (data[0] === "ram_rider") {
     if (data[33] > 0) data[33]--;
     if (data[33] <= 0) {
@@ -362,13 +310,9 @@ if (eff[0] === "delayed_spell") {
     }
   }
 
-  // Non-targeters (rare — mostly unused right now)
   if (data[19] === "none") return;
 
-  // --- STEP 1: Validate lock ---
-  // If locked, check that the locked target is still valid
-  // (alive, deployed, still within attack range).
-  // If not, release the lock so we re-scan below.
+ 
   var lockValid = false;
   if (data[15] === true && data[14] >= 0 && data[14] < enemies.length) {
     var tgt = enemies[data[14]];
@@ -380,18 +324,16 @@ if (eff[0] === "delayed_spell") {
   if (!lockValid) {
     data[15] = false;
   }
-  // ===== Ramp reset on lost lock =====
+  
   if (!data[15] && (data[0] === "mighty_miner" || data[0] === "inferno_dragon" || data[0]==="inferno_tower")) {
     data[33] = 0;
     data[34] = -1;
   }
-  // ===== END Ramp reset =====
 
-  // --- STEP 2: Acquire target if not locked ---
   if (!data[15]) {
     data[14] = findTargetInSight(data, enemies);
   }
-  // Charge meter — ticks up each frame, capped at 60 (2 sec at 30fps)
+ 
 if (data[32] !== undefined) {
   if (data[0] === "royal_knight") {
     // Royal Knight only charges when NOT attacking (target out of range)
@@ -418,13 +360,13 @@ if (data[32] !== undefined) {
 var charging = (data[32] >= 60); 
 var movementCharging = (data[0] === "prince" || data[0] === "royal_knight" || data[0] ==="dark_prince") && charging;
  
-  // --- STEP 3: Act based on target ---
+
   if (data[14] !== -1 && data[14] < enemies.length) {
     var tgt = enemies[data[14]];
     var dist = edgeDistance(data, tgt);
 
     if (dist <= data[9]) {
-      // In attack range — lock on and attack
+      
       data[15] = true;
       faceTarget(data, tgt);
       attemptAttack(data, tgt, data[14], team,slowed);
@@ -442,16 +384,14 @@ var movementCharging = (data[0] === "prince" || data[0] === "royal_knight" || da
 }
 
 
-// ============================================================
-// findTargetInSight — scan all enemies, return closest valid idx
-// ============================================================
+
 function findTargetInSight(data, enemies) {
   var bestIdx = -1;
-  var bestDist = data[10]; // sight range
-  var tt = data[19];       // targetType
+  var bestDist = data[10];
+  var tt = data[19];       
  var canSeeAcrossRiver = (
   data[0] === "prince" ||
-  data[0] === "dark_prince" ||      // ← already added probably, double-check
+  data[0] === "dark_prince" ||      
   data[0] === "hog_rider" ||
   data[0] === "royal_hog" ||
   
@@ -468,8 +408,8 @@ function findTargetInSight(data, enemies) {
 if (e[18] === "bomb") continue;  
 if (data[18] === "ground" && !canSeeAcrossRiver && (data[9] < 2 || data[0] === "bandit" || data[0] === "mega_knight")) {
   var amBlue = (enemies === rTroops);
-  if (amBlue && data[4] >= 17 && e[4] < 17) continue;       // blue still on blue side, target across the river
-  if (!amBlue && data[4] <= 15 && e[4] > 15) continue;      // red still on red side, target across the river
+  if (amBlue && data[4] >= 17 && e[4] < 17) continue;       
+  if (!amBlue && data[4] <= 15 && e[4] > 15) continue;      
 }
    var isGrounded = false;
 if (e[23]) {
@@ -498,10 +438,7 @@ if (tt === "ground" && e[18] === "air" && !isGrounded) continue;
 }
 
 
-// ============================================================
-// edgeDistance — distance between two troops' HITBOX EDGES
-// (center-to-center minus both radii). Matches original's `cdis`.
-// ============================================================
+
 function edgeDistance(a, b) {
   var dr = b[4] - a[4];
   var dc = b[5] - a[5];
@@ -509,12 +446,7 @@ function edgeDistance(a, b) {
 }
 
 
-// ============================================================
-// moveToward — one step toward target (row/col aware).
-// Matches original: ang = atan2(colDelta, rowDelta),
-//   data[4] += cos(ang) * speed/spdm   (row movement)
-//   data[5] += sin(ang) * speed/spdm   (col movement)
-// ============================================================
+
 function moveToward(data, tgt,slowed,charging,raged) {
    
    if (slowed === undefined) slowed = false;
@@ -538,10 +470,7 @@ function moveToward(data, tgt,slowed,charging,raged) {
 }
 
 
-// ============================================================
-// faceTarget — update facing angle without moving
-// (used when in attack range but still wanting to look at target)
-// ============================================================
+
 function faceTarget(data, tgt) {
   var xdif = tgt[4] - data[4];
   var ydif = tgt[5] - data[5];
@@ -550,20 +479,7 @@ function faceTarget(data, tgt) {
 }
 
 
-// ============================================================
-// walkDefaultPath — no enemy in sight, head toward enemy's
-// nearest princess tower based on which lane we're in.
-// (Matches original's `if(data[5] < 9)` lane logic.)
-// ============================================================
-// ============================================================
-// walkDefaultPath — no enemy in sight, march straight along
-// the lane. In real Clash, troops don't "target" towers —
-// they walk straight forward and happen to bump into towers
-// if nothing distracts them. Lane = roughly their current column.
-//
-// Direction is determined by team: blue troops move UP (toward
-// lower row numbers, where red's side is), red troops move DOWN.
-// ============================================================
+
 function walkDefaultPath(data, enemies,slowed,charging,raged) {
   if (data[8] === 0) return;
 
@@ -589,9 +505,9 @@ function walkDefaultPath(data, enemies,slowed,charging,raged) {
       data[16] = 0;
     }
   } else {
-    // --- BLUE team walking north ---
+  
     if (data[4] > 17.2) {
-      // Still south of the river — walk diagonally to the bridge entry point
+    
       var bridgeRow = 17;
       var bridgeCol = onLeft ? 3 : 14;
       walkTowardPoint(data, bridgeRow, bridgeCol, step);
@@ -603,7 +519,7 @@ function walkDefaultPath(data, enemies,slowed,charging,raged) {
   }
 }
 
-// Helper: move one step toward the target (row, col) at full speed.
+
 function walkTowardPoint(data, targetRow, targetCol, step) {
   var dr = targetRow - data[4];
   var dc = targetCol - data[5];
@@ -613,7 +529,7 @@ function walkTowardPoint(data, targetRow, targetCol, step) {
   // Angle of travel
   var ang = Math.atan2(dc, dr);
 
-  // Break the step into row/col components
+ 
   data[4] += Math.cos(ang) * step;
   data[5] += Math.sin(ang) * step;
 
@@ -621,11 +537,7 @@ function walkTowardPoint(data, targetRow, targetCol, step) {
   data[16] = ang * 180 / Math.PI;
 }
 
-// ============================================================
-// attemptAttack — fire an attack if cooldown is ready
-// Melee (range < 2, no AoE) → direct damage
-// Ranged → spawn a projectile
-// ============================================================
+
 function attemptAttack(data, tgt, tgtIdx, team,slowed) {
   if (data[11] > 0) return;  // still reloading
   data[11] = data[12];  
@@ -642,26 +554,26 @@ function attemptAttack(data, tgt, tgtIdx, team,slowed) {
   var dmg = data[3];
     if (data[32] >= 60 && data[0] !== "royal_knight") {
     dmg = Math.floor(dmg * 2);
-    data[32] = 0;   // reset charge counter — must wait 2 sec for next charge
+    data[32] = 0;   
     say(team + " " + data[0] + " CHARGE HIT");
   } else if (data[32] !== undefined && data[0] !== "royal_knight") {
-    data[32] = 0;   // normal attack also resets the counter
+    data[32] = 0;  
   }
 
-  // Crown tower damage penalty (towers are indices 0,1,2)
+  
   if (tgtIdx <= 2) {
     dmg = Math.floor(dmg * data[20]);
   }
-  // ===== RAMP-UP DAMAGE: Mighty Miner & Inferno Dragon =====
+
  if (data[0] === "mighty_miner" || data[0] === "inferno_dragon"||data[0] === "inferno_tower") {
   if (data[34] !== tgtIdx) {
     data[33] = 0;
     data[34] = tgtIdx;
   }
   
-  data[33] = Math.min(data[33] + 1, 30);   // cap at 30 hits = 6 seconds at 5hits/sec
+  data[33] = Math.min(data[33] + 1, 30); 
   
-  // Exponential ramp: 1x at start, ~50x at full ramp
+ 
   var progress = data[33] / 30;
   var rampMult = Math.exp(2 * progress);
   dmg = Math.floor(dmg * rampMult);
@@ -674,16 +586,9 @@ function attemptAttack(data, tgt, tgtIdx, team,slowed) {
     dmg = Math.floor(dmg * 1.5);
   }
 }
-  //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// ===== SPECIAL CASE: Electro Spirit — chain lightning =====
-// ===== SPECIAL CASE: Bowler — throws a rolling rock =====
-// ===== SPECIAL CASE: Executioner — throws a piercing axe =====
-// ===== SPECIAL CASE: Magic Archer — fires piercing arrow =====
-// ===== SPECIAL CASE: Mega Knight =====
-// ===== SPECIAL CASE: Firecracker — fires projectile with stored direction =====
-// ===== SPECIAL CASE: Bandit — leap if target is 3-5 tiles away =====
-// ===== SPECIAL CASE: Fisherman — hooks ground troops =====
-// ===== SPECIAL CASE: Skeleton King — cone melee like Mega Knight =====
+  //++++++++++++++++++++++++++++++++++++++++these cases are special cases for each troop++++++++++++++++++++++++++++++++++++++++++++++
+
+
 if (data[0] === "skeleton_king") {
   if (slowed) data[11] = Math.ceil(data[11] * 1.35);
 
@@ -731,9 +636,9 @@ if (data[0] === "fisherman") {
   
   if (dist > 1.6) {
     // ===== Set animation fields on TARGET =====
-    tgt[36] = tgt[4];    // store target's old row
-    tgt[37] = tgt[5];    // store target's old col
-    tgt[38] = 30;         // 12 frames animation
+    tgt[36] = tgt[4];   
+    tgt[37] = tgt[5];   
+    tgt[38] = 30;        
     // ===== END =====
     
     // Hook
@@ -835,7 +740,7 @@ for (var j = 0; j < enemiesArr.length; j++) {
 }
 return;
 }
-// ===== END Mega Knight =====
+
 
 if (data[0] === "magic_archer") {
   var arrowIdx = getCardByName("MagicArrow");
@@ -844,7 +749,7 @@ if (data[0] === "magic_archer") {
   }
   return;
 }
-// ===== END Magic Archer =====
+
 if (data[0] === "executioner") {
   var axeIdx = getCardByName("ExecutionerAxe");
   if (axeIdx !== -1) {
@@ -915,11 +820,11 @@ if (data[0] === "electro_spirit") {
     current = nextTarget;
   }
 
-  data[1] = 0;   // spirit dies
+  data[1] = 0;  
   say(team + " electro_spirit chained to " + hitCount + " targets");
   return;
 }
-// ===== END Electro Spirit =====
+
 if (data[0] === "fire_spirit") {
   data[4] = tgt[4];
   data[5] = tgt[5];
@@ -960,11 +865,11 @@ if (data[0] === "fire_spirit") {
     }
     return;
   }
-  // ===== SPECIAL CASE: Dark Prince — forward 60° cone melee =====
+ 
   if (data[0] === "dark_prince") {
     var enemies = (team === "blue") ? rTroops : bTroops;
     var coneRadius = 1.5;
-    var coneHalfAngle = 45.5 * Math.PI / 180;  // 60° total = 30° each side
+    var coneHalfAngle = 45.5 * Math.PI / 180;  
     var facingRad = data[16] * Math.PI / 180;
 
     for (var j = 0; j < enemies.length; j++) {
@@ -972,46 +877,45 @@ if (data[0] === "fire_spirit") {
       if (e[1] <= 0) continue;
       if (e[22] > 0) continue;
 
-      // Edge distance check (within cone radius)
+      
       var dr = e[4] - data[4];
       var dc = e[5] - data[5];
       var centerDist = Math.sqrt(dr * dr + dc * dc);
       var edgeDist = centerDist - e[6] / 2;
       if (edgeDist > coneRadius) continue;
 
-      // Angle from Dark Prince to enemy
+    
       var angleToEnemy = Math.atan2(dc, dr);
       var angleDiff = angleToEnemy - facingRad;
-      // Normalize angle difference to [-PI, PI]
+  
       while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
       while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
 
       if (Math.abs(angleDiff) > coneHalfAngle) continue;
 
-      // Hit! Apply damage with crown penalty if it's a tower
       var enemyDmg = data[3];
       if (j <= 2) enemyDmg = Math.floor(enemyDmg * e[20]);
       dealDamage(e, enemyDmg);
       say(team + " " + data[0] + " coned " + e[0] + " for " + enemyDmg);
       
-      // Apply on-hit effects (none for DP, but for completeness)
+   
       if (data[24] && data[24].length > 0) {
         for (var k = 0; k < data[24].length; k++) {
           e[23].push(data[24][k].slice());
         }
       }
     }
-    return;  // skip normal attack flow
+    return;  
   }
-  // ===== SPECIAL CASE: Hunter — forward cone with damage falloff =====
+
   if (data[0] === "hunter") {
     var enemies = (team === "blue") ? rTroops : bTroops;
     var coneRadius = 5.0;
     var coneHalfAngle = 37.5 * Math.PI / 180;  // 75° total
     var facingRad = data[16] * Math.PI / 180;
 
-    var maxDamage = data[3];    // 211 at point-blank
-    var minDamage = 135;        // at max range
+    var maxDamage = data[3];    
+    var minDamage = 135;        
 
     for (var j = 0; j < enemies.length; j++) {
       var e = enemies[j];
@@ -1023,18 +927,14 @@ if (data[0] === "fire_spirit") {
       var centerDist = Math.sqrt(dr * dr + dc * dc);
       var edgeDist = centerDist - e[6] / 2;
       if (edgeDist > coneRadius) continue;
-      if (edgeDist < 0) edgeDist = 0;   // clamp negative for falloff calc
-
-      // Angle check (same as Dark Prince)
+      if (edgeDist < 0) edgeDist = 0;   
       var angleToEnemy = Math.atan2(dc, dr);
       var angleDiff = angleToEnemy - facingRad;
       while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
       while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
       if (Math.abs(angleDiff) > coneHalfAngle) continue;
 
-      // Damage falloff: full damage at distance 0, scales linearly to minDamage at coneRadius
-      // Damage falloff: exponential decay from maxDamage at point-blank.
-// At half range (2.5 tiles), damage drops below 140 — can't kill goblins.
+      
 var falloffK = 0.3;
 var enemyDmg = Math.floor(maxDamage * Math.exp(-falloffK * edgeDist));
       if (j <= 2) enemyDmg = Math.floor(enemyDmg * e[20]);
@@ -1043,7 +943,6 @@ var enemyDmg = Math.floor(maxDamage * Math.exp(-falloffK * edgeDist));
     }
     return;
   }
-  // ===== END Hunter =====
 
 
 
@@ -1080,7 +979,7 @@ var enemyDmg = Math.floor(maxDamage * Math.exp(-falloffK * edgeDist));
 
 
 
-   // ======================================================================================================
+
   var isMelee = (data[9] < 2 && data[17] === 0);
   if (isMelee) {
   if (data[0] === "royal_knight" && data[32] >= 60) {
@@ -1090,7 +989,7 @@ var enemyDmg = Math.floor(maxDamage * Math.exp(-falloffK * edgeDist));
   say(team + " royal_knight CHAIN HIT " + tgt[0] + " for " + firstDmg);
   
   if (!data[23]) data[23] = [];
-  // Initialize hit-tracking with the primary target
+
   var hitIdxs = {};
   hitIdxs[tgtIdx] = true;
   data[23].push(["chain_dash", 3, 7, hitIdxs]);
@@ -1100,14 +999,14 @@ var enemyDmg = Math.floor(maxDamage * Math.exp(-falloffK * edgeDist));
 }
     dealDamage(tgt, dmg);
     say(team + " " + data[0] + " hit " + tgt[0] + " for " + dmg);
-     // ===== Royal Knight chain =====
+  
 
   }  else {
 
-  var onHit = data[24] || [];   // get effects, default empty
+  var onHit = data[24] || [];   
   var proj = [data[0] + "_proj", data[4], data[5],
               tgtIdx, dmg, PROJECTILE_SPEED, data[17],
-              onHit];   // ← NEW: index 7 of the projectile
+              onHit];   
   if (team === "blue") bProj.push(proj);
   else                 rProj.push(proj);
   say(team + " " + data[0] + " fired at " + tgt[0]);
@@ -1118,10 +1017,7 @@ var enemyDmg = Math.floor(maxDamage * Math.exp(-falloffK * edgeDist));
     data[1] = 0;
   }
 }
-// ============================================================
-// triggerSpawnSpell — fires a spell at this troop's location
-// when it spawns, if the troop's data[25] is a spell name.
-// ============================================================
+
 function triggerSpawnSpell(troop, team) {
   var cardName = troop[25];
   if (!cardName) return;
@@ -1134,12 +1030,7 @@ function triggerSpawnSpell(troop, team) {
     spawnCard(team, cardName, troop[4], troop[5]);
   }
 }
-// ============================================================
-// handleDeath(troop, team)
-// ------------------------------------------------------------
-// Called once when a troop's HP reaches 0. Handles death-spawn
-// effects (Giant Skeleton bomb, Lava Hound pups, etc.).
-// ============================================================
+
 function handleDeath(troop, team) {
   var deathSpellName = troop[29];
   if (deathSpellName) {
@@ -1158,54 +1049,43 @@ function handleDeath(troop, team) {
 }
 
 
-// ============================================================
-// checkAggroPull — kept as a no-op for backwards compatibility.
-// With proper every-frame sight scanning, aggro pulling happens
-// automatically: when a new troop spawns next to an enemy, the
-// enemy's next-frame scan will naturally pick it up as the
-// closest target (unless the enemy is a building-targeter like
-// Giant, which filters out non-buildings).
-// ============================================================
+
 function checkAggroPull(newTroop, team) {
-  // Intentionally empty — handled implicitly by findTargetInSight.
+ 
 }
 function checkTowerPull(btgt) {
-  // Only blue BTGTs trigger the pull
+ 
   if (btgt[18] !== "ground") return;
   if (btgt[19] !== "buildings") return;
 
   for (var j = 3; j < rTroops.length; j++) {
-    // Start at 3 to skip red's own towers (indices 0-2).
-    var e = rTroops[j];
-    if (e[1] <= 0) continue;               // dead
-    if (e[22] > 0) continue;               // still deploying
-    if (e[18] !== "ground") continue;      // only ground troops get pulled
-    if (e[19] === "buildings") continue;   // red BTGTs are immune
 
-    // Is this red troop currently locked onto one of the BLUE towers?
+    var e = rTroops[j];
+    if (e[1] <= 0) continue;              
+    if (e[22] > 0) continue;             
+    if (e[18] !== "ground") continue;      
+    if (e[19] === "buildings") continue;  
+
     var lockedOnTower = (e[15] === true && e[14] >= 0 && e[14] <= 2 &&
                         bTroops[e[14]] && bTroops[e[14]][1] > 0);
     if (!lockedOnTower) continue;
 
-    // Is the blue BTGT on the red troop's SOUTH side?
-    // Higher row = more south (closer to blue towers = "tower-facing").
+  
     if (btgt[4] <= e[4]) continue;
 
-    // Hitboxes must be deeply overlapping
+  
     var dist = edgeDistance(e, btgt);
     if (dist > -0.1) continue;
 
-    // Pull! Break the red troop's lock so it re-scans next frame.
-    e[15] = false;
-    e[14] = -1;
+
+     e[15] = false;
+      e[14] = -1;
     say(e[0] + " pulled off tower by " + btgt[0]);
   }
 }
 
 
-// ============================================================
-// updateElixir / cleanupDead — unchanged
-// ============================================================
+
 function updateElixir() {
   if (elixir < maxE) {
     elixir = Math.min(maxE, elixir + regenX);
@@ -1213,8 +1093,7 @@ function updateElixir() {
 }
 
 function cleanupDead() {
-  // No-op for now. Splicing dead troops would invalidate projectile
-  // target indices. Skip for simplicity; can compact later if needed.
+
 }
 function applyStun(troop, frames) {
   if (!troop) return;

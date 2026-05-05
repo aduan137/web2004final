@@ -42,9 +42,6 @@ function mousePressed() {
 }
 
 
-// ============================================================
-// getHandSlotAtX(px) → slot index (0-3) or -1
-// ============================================================
 
 function isValidSpellPlacement(row, col) {
   if (row < 0.5 || row > 31.5) return false;
@@ -52,10 +49,6 @@ function isValidSpellPlacement(row, col) {
   return true;
 }
 
-// ============================================================
-// tryPlaceSelectedCard(px, py) — attempt to spawn the selected
-// card at the click position. Checks elixir and placement.
-// ============================================================
 function tryPlaceSelectedCard(px, py) {
   if (bSel === -1) return;
   if (bOrder.length === 0) return;
@@ -89,16 +82,15 @@ if (isSpellCard(cardIdx)) {
     return;
   }
 
-  // Spawn each troop from the card template at the click position
   var templates = cards[cardIdx][3];
   for (var i = 0; i < templates.length; i++) {
     var t = deepCopyTroop(templates[i]);
     var rawName = cards[cardIdx][0];
 t[39] = SPRITE_ALIASES[rawName] || rawName;
      t[4] = -t[4];      
-    t[4] = row + t[4];    // apply spawn offset (row)
-    t[5] = col + t[5];    // apply spawn offset (col)
-    t[16] = 180;          // blue troops face up (toward enemy)
+    t[4] = row + t[4];    
+    t[5] = col + t[5];   
+    t[16] = 180;         
     bTroops.push(t);
       triggerSpawnSpell(t, "blue");
   }
@@ -111,13 +103,7 @@ t[39] = SPRITE_ALIASES[rawName] || rawName;
   bSel = -1;
 }
 
-// ============================================================
-// getCardBounds(cardIdx)
-// ------------------------------------------------------------
-// Returns the bounding box of all troops in the card's template.
-// Used for placement validation — ensures wide formations like
-// Royal Recruits can't spawn troops off the arena.
-// ============================================================
+
 function getCardBounds(cardIdx) {
   var templates = cards[cardIdx][3];
   var minRow = 0, maxRow = 0, minCol = 0, maxCol = 0;
@@ -132,23 +118,16 @@ function getCardBounds(cardIdx) {
   return { minRow: minRow, maxRow: maxRow, minCol: minCol, maxCol: maxCol };
 }
 
-// ============================================================
-// isValidPlacement(row, col)
-// ------------------------------------------------------------
-// Player can only place on their own half (rows 16.5+).
-// River is at rows 15-16, so excluded automatically.
-// TODO: once an enemy princess tower dies, allow placement on
-// their half in that lane.
-// ============================================================
+
 function isValidPlacement(row, col, bounds) {
-  // Default bounds if not provided (single troop with size 1)
+ 
   if (!bounds) bounds = { minRow: -0.5, maxRow: 0.5, minCol: -0.5, maxCol: 0.5 };
 
-  // Arena edges: every troop in the formation must fit inside
-if (row + bounds.minRow < 18) return false;     // can't place above row 14
-  if (row + bounds.maxRow > 31.5) return false;   // can't extend past arena bottom
-  if (col + bounds.minCol < 0.5) return false;    // can't extend past left edge (col 0)
-  if (col + bounds.maxCol > 17.5) return false;   // can't extend past right edge (col 18)
+ 
+if (row + bounds.minRow < 18) return false;    
+  if (row + bounds.maxRow > 31.5) return false;   
+  if (col + bounds.minCol < 0.5) return false;    
+  if (col + bounds.maxCol > 17.5) return false;   
 
   // Overlap check (existing)
   for (var i = 0; i < bTroops.length; i++) {
@@ -162,23 +141,15 @@ if (row + bounds.minRow < 18) return false;     // can't place above row 14
 }
 
 
-// ============================================================
-// cycleHand(slot) — play the card in `slot`, bring next card in.
-// Matches the original engine's cycling logic exactly:
-//   bOrder [a, b, c, d, e, f, g, h] with slot=2 (play c) becomes
-//   bOrder [a, b, e, d, f, g, h, c]
-// ============================================================
+
 function cycleHand(slot) {
-  bOrder.push(bOrder[slot]);              // played card → end
-  bOrder.splice(slot, 1, bOrder[4]);      // replace slot with next card
-  bOrder.splice(4, 1);                    // remove the duplicated slot-4
+  bOrder.push(bOrder[slot]);          
+  bOrder.splice(slot, 1, bOrder[4]);     
+  bOrder.splice(4, 1);                   
 }
 
 
-// ============================================================
-// drawUI() — called every frame from main.js's draw().
-// Overrides the placeholder in main.js automatically.
-// ============================================================
+
 function drawUI() {
   ensureDefaultDeck();
   drawElixirBar();
@@ -187,9 +158,7 @@ function drawUI() {
 }
 
 
-// ============================================================
-// drawElixirBar()
-// ============================================================
+
 function drawElixirBar() {
   noStroke();
   fill(30, 30, 50);
@@ -217,19 +186,11 @@ function drawElixirBar() {
 }
 
 
-// ============================================================
-// drawHand() — draws the 4 card slots.
-// ============================================================
 
 
 
 
-// ============================================================
-// drawPlacementPreview()
-// ------------------------------------------------------------
-// Shows a ghost circle at the mouse position when a card is
-// selected: green if placement is legal, red if not.
-// ============================================================
+
 function drawPlacementPreview() {
   if (bSel === -1) return;
 
@@ -242,7 +203,7 @@ function drawPlacementPreview() {
 var col = Math.floor(pxToTile(mouseX)) + 0.5;
 var valid = isValidPlacement(row, col);
 
-// Compute where the ghost circle should go in pixels (snapped)
+
 var ghostX = tileToPx(col);
 var ghostY = tileToPx(row);
 
@@ -269,7 +230,7 @@ if (isSpell) {
   ellipse(ghostX, ghostY, 28, 28);
 }
 
-  // Tinted zone: highlight the valid placement area
+ 
 if (!isSpell && valid) {
   fill(255, 255, 255, 20);
   rect(ARENA_PX_X,
@@ -278,14 +239,7 @@ if (!isSpell && valid) {
        tileToPx(32) - tileToPx(17));
 }
 }
-// ============================================================
-// renderHandHTML() — populates the .hand-card divs based on
-// the current bOrder / bDeck. Called every frame from drawUI().
-// ------------------------------------------------------------
-// We rebuild the cards' contents (img + cost + name + classes)
-// each frame because elixir affordability changes constantly.
-// The DOM elements themselves stay — we just update their innards.
-// ============================================================
+
 function renderHandHTML() {
   for (var slot = 0; slot < 4; slot++) {
     var el = document.querySelector('.hand-card[data-slot="' + slot + '"]');
@@ -314,8 +268,7 @@ function renderHandHTML() {
     if (selected)    el.classList.add('selected');
     if (!affordable) el.classList.add('unaffordable');
 
-    // Only rebuild innerHTML if this card slot's content actually changed
-    // (avoids reflow every frame for unchanged cards)
+   
     var stamp = cardName + '|' + cost;
     if (el.dataset.stamp !== stamp) {
       el.dataset.stamp = stamp;
